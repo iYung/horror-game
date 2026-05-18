@@ -217,15 +217,44 @@ Both maps are 40×30 cells, cell size 32 px (1280×960 world px). Grid values: `
 `map:is_wall(col, row)` returns true for walls and out-of-bounds.
 `map:world_to_cell(wx, wy)` and `map:cell_to_world(col, row)` convert between coordinate spaces.
 
-### Forest Facility
-Cross-shaped: wide horizontal hall (rows 13–17) + vertical hall (cols 18–22), four large corner rooms. Long sightlines, open.
-- Spawn: cell (4, 4) — top-left room
-- Extraction: cell (35, 25) — bottom-right room
+Both maps use a grid of rooms connected by 1-cell-wide hallways. Room sizes and hallway lengths are deliberately varied (S/M/L) so different parts of the map have different sightline lengths and encounter distances.
 
-### Abandoned Hospital
-3×3 grid of rooms (A–I) connected by corridors. Dense, short sightlines, many corners.
-- Spawn: cell (5, 4) — room A (top-left)
-- Extraction: cell (33, 26) — room I (bottom-right)
+### Forest Facility (`map_forest.lua`)
+
+4×3 grid of 12 rooms. Each room's dimensions are determined by its column width × row height.
+
+**Column widths:** A=8 (L), B=4 (S), C=6 (M), D=8 (L)
+**Row heights:** 1=6 (M), 2=4 (S), 3=8 (L)
+**Horizontal gaps (hallway length):** A–B=2 (S), B–C=6 (L), C–D=4 (M)
+**Vertical gaps (hallway length):** rows 1–2=4 (M), rows 2–3=6 (L)
+
+```
+cols:  2–9    10–11  12–15  16–21  22–27  28–31  32–39
+       [A  L ] [S]   [B S]  [ L ]  [C M ] [ M ]  [D  L ]
+rows:
+2–7    A1 8×6  ──    B1 4×6  ────  C1 6×6  ──    D1 8×6    (M height)
+8–11    │(M)         │(M)          │(M)           │(M)
+12–15  A2 8×4  ──    B2 4×4  ────  C2 6×4  ──    D2 8×4    (S height)
+16–21   │(L)         │(L)          │(L)           │(L)
+22–29  A3 8×8  ──    B3 4×8  ────  C3 6×8  ──    D3 8×8    (L height)
+```
+
+- Spawn: pixel (5×CELL, 4×CELL) — room A1, top-left
+- Extraction: pixel (35×CELL, 25×CELL) — room D3, bottom-right
+
+### Abandoned Hospital (`map_hospital.lua`)
+
+5×4 grid of 20 rooms.
+
+**Column widths:** A=4 (S), B=6 (M), C=4 (S), D=7 (L), E=5 (M)
+**Row heights:** 1=4 (S), 2=5 (M), 3=6 (L), 4=5 (M)
+**Horizontal gaps:** A–B=2 (S), B–C=5 (L), C–D=3 (M), D–E=2 (S)
+**Vertical gaps:** rows 1–2=2 (S), rows 2–3=3 (M), rows 3–4=2 (S)
+
+The D column rooms are notably wider (7 cells), creating bigger spaces mid-map. The long B–C hallways (5 cells) are the most exposed stretches on the map.
+
+- Spawn: pixel (2×CELL, 2×CELL) — room A1, top-left
+- Extraction: pixel (37×CELL, 26×CELL) — room E4, bottom-right
 
 ---
 
