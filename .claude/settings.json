@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -E \"\\\\.\\(lua|json|txt|md\\)$\")",
+      "Bash(git -C /Users/ivan/Development/love-exemplar log --oneline)",
+      "Bash(git -C /Users/ivan/Development/love-exemplar show HEAD --stat)",
+      "Bash(git -C /Users/ivan/Development/love-exemplar log --all --stat)",
+      "Bash(git -C /Users/ivan/Development/love-exemplar ls-files)",
+      "Bash(git -C /Users/ivan/Development/love-exemplar show 0f7a6dec:lua/core/render/sprite.lua)",
+      "Bash(git -C /Users/ivan/Development/love-exemplar show 0f7a6dec:main.lua)",
+      "Bash(git -C /Users/ivan/Development/love-exemplar show 0f7a6dec:lua/core/scene/scene.lua)",
+      "Bash(git -C /Users/ivan/Development/love-exemplar show 0f7a6dec:lua/core/scene/sceneManager.lua)",
+      "Bash(love . --no-audio)",
+      "Bash(kill %1)",
+      "Bash(lua5.3 -e ' *)",
+      "Bash(lua -e \"print\\('lua5.3 not found, skipping'\\)\")",
+      "Bash(which lua *)",
+      "Read(//usr/local/**)",
+      "Bash(find /usr -name \"lua*\" -type f 2>/dev/null | head -5; find /opt -name \"lua*\" -type f 2>/dev/null | head -5; find /Applications -name \"love\" -type f 2>/dev/null | head -3)",
+      "Read(//usr/**)",
+      "Read(//opt/**)",
+      "Read(//Applications/**)",
+      "Bash(luac -p /Users/ivan/Development/games/horror/game/systems/fov.lua /Users/ivan/Development/games/horror/game/systems/camera_shake.lua /Users/ivan/Development/games/horror/game/systems/inventory.lua /Users/ivan/Development/games/horror/game/systems/pathfinder.lua)",
+      "Bash(lua -e ' *)",
+      "Bash(grep -E \"bin/lua[0-9.]?$\")"
+    ]
+  }
+}

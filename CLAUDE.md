@@ -1,0 +1,258 @@
+# NIGHTFALL — Codebase Guide
+
+## What this is
+
+Top-down horror game built on Love2D. Two-phase loop: plan a run in a menu (Phase 1), then survive a map and extract (Phase 2). One monster per run, procedurally traitened from a point budget the player sets.
+
+---
+
+## Folder structure
+
+```
+core/lua/       Engine primitives — no game knowledge, reusable across projects
+game/
+  data/         Static definitions: items and traits
+  entities/     Player and monster
+  scenes/       One file per screen (planning, trait reveal, run, result)
+  systems/      Stateful subsystems: FOV, inventory, pathfinder, shake, extraction
+  ui/           HUD
+  world/        Map grid, two map layouts, item spawner
+main.lua        Entry point — wires SceneManager and initial scene
+```
+
+---
+
+## Engine primitives (core/lua/)
+
+Always use these. Never reimplement what they already do.
+
+| Class | Use it for |
+|-------|-----------|
+| `Sprite` | Any single drawable rectangle or image |
+| `SpriteSet` | Multiple sprites sharing a position, one active at a time |
+| `Drawer` | Registering drawables with a priority; calls `draw()` on each in order |
+| `Camera` | World-to-screen transform, smooth follow, zoom |
+| `Scene` | Base class for game states; owns a `Drawer` and a `Camera` |
+| `SceneManager` | Holds the active scene; drives `update`, `draw`, `keypressed` |
+| `Timer` | Fires after an interval, preserves remainder for accurate looping |
+| `Input` | Action-mapped keyboard polling; call `update()` once per frame |
+
+`Scene.new()` creates `self.drawer` and `self.camera`. Subclass it and override `update`/`draw`/`on_enter`/`on_exit`.
+
+---
+
+## Game loop
+
+```
+PlanningScene → TraitRevealScene → RunScene → ResultScene → PlanningScene …
+```
+
+`main.lua` boots `PlanningScene`. Each scene switches to the next via:
+```lua
+require("game/scene_ref").manager:switch(NextScene.new(...))
+```
+
+`scene_ref.lua` is a singleton `{ manager = nil }` set at startup to avoid circular requires.
+
+---
+
+## Phase 1 — PlanningScene
+
+Player configures the next run:
+- **Map** — Forest Facility or Abandoned Hospital (toggle with `M`)
+- **Budget** — 0–7 points (adjust with `Up`/`Down`); controls monster traits AND which loot can spawn
+- **Loadout** — one item from the stash into slot 1 (cycle with `L`)
+
+On `Enter`, traits are rolled from `traits.all` (greedy shuffle within budget) and a `RunConfig` table is built:
+```lua
+RunConfig = {
+  map_id         = "forest" | "hospital",
+  budget         = number,
+  loadout_item   = Item | nil,
+  monster_traits = { "sight", "hearing", … },
+}
+```
+
+`SaveState = { stash = {} }` persists between runs in memory. Max 10 stash items.
+
+---
+
+## Phase 2 — RunScene
+
+### Startup order (on_enter)
+1. Load map (`map_forest` or `map_hospital`)
+2. Create `CameraShake`
+3. Spawn `Monster` at extraction coords
+4. Spawn `Player` at map spawn; put loadout item in slot 1
+5. `ItemSpawner.spawn(map, budget)` → ground items list
+6. Create `FOV`, `Extraction`, `HUD`
+7. Set `monster.on_kill` callback → death → `ResultScene`
+8. Wrap flare gun `use_fn` to gate on `extraction:in_zone()`
+9. Register map, player, monster, ground drawable in `drawer`
+
+### Update order (each frame)
+1. `player:update(dt)`
+2. `monster:update(dt, player)`
+3. Item timers (torch/flashlight burn down)
+4. `extraction:update(dt, player)` — check for "extracted" / "failed"
+5. `camera:follow(player:centre(), 0.85)`
+6. `shake:update(dt)` → store `_shake_ox, _shake_oy`
+7. `fov:update(px, py, dx, dy, active_item)`
+8. `monster.visible = fov:is_visible(monster centre)`
+
+### Draw order (each frame)
+1. `camera:attach()`
+2. `love.graphics.translate(shake_ox, shake_oy)` — shake is a visual-only offset
+3. `drawer:draw()` — map (priority 1), ground items (5), player + monster (10)
+4. `draw_extraction_zone()` — pulsing green circle in world space
+5. `fov:draw(active_item)` — fog overlay, drawn OVER world
+6. `camera:detach()`
+7. `hud:draw()` — screen space
+
+---
+
+## Systems
+
+### FOV (`game/systems/fov.lua`)
+
+Raycasts from player position. Two passes every frame:
+
+1. **Directional cone** — 180 rays spanning ±`ANGLE` (55°) around facing direction, up to `RANGE` (14) cells. Wall-blocked.
+2. **Ambient ring** — 36 rays, full 360°, `AMBIENT_R` (3) cells. Always on.
+
+Item modifiers:
+- Flashlight on → cone widens to `FL_ANGLE` (80°), range extends to `FL_RANGE` (18)
+- Torch active → adds a 5-cell omni pass (same algorithm as ambient)
+
+Cells are stored in two sets keyed by `col*1000+row`:
+- `visible` — cleared every frame (currently lit)
+- `explored` — never cleared (has been seen)
+
+`draw()` renders black over unexplored cells, 60% black over explored-not-visible, nothing over visible.
+
+### Camera shake (`game/systems/camera_shake.lua`)
+
+`trigger(magnitude)` starts a shake. Magnitude decays to 0 over 0.15 s. `offset()` returns a random `ox, oy` in `[-magnitude, +magnitude]`.
+
+**Important:** shake offset is applied as `love.graphics.translate` inside `camera:attach()/detach()`, NOT added to `camera.x/y`. Adding to the camera position causes drift because `follow()` lerps from wherever the camera currently sits.
+
+Monster step timer calls `shake:trigger` based on distance:
+- > 10 cells → nothing
+- 6–10 → magnitude 1
+- 3–6 → magnitude 3
+- < 3 → magnitude 6
+
+### Inventory (`game/systems/inventory.lua`)
+
+5 slots, all `nil` by default. Active slot index 1–5.
+
+Key methods: `pick_up(item)`, `drop()`, `swap_with_ground(item)`, `cycle(dir)`, `active()`, `has_item(id)`, `remove_active()`, `remove_item_by_ref(item)`.
+
+Player controls: `Q`/`E` cycle, `1`–`5` jump, `F` use, `G` pick up / drop.
+
+### Pathfinder (`game/systems/pathfinder.lua`)
+
+A* on the map grid, 4-directional, Manhattan heuristic. Returns `{ {col,row}, … }` from start to goal inclusive, or `nil` if no path. Capped at 2000 nodes.
+
+Used only by monster WANDER/ALERTED/SEARCH states. Monster ignores wall collision for actual movement (walks through walls) — pathfinding is only used to pick destinations during wander.
+
+### Extraction (`game/systems/extraction.lua`)
+
+`try_start(player)` — starts 60 s countdown if player is inside `map.extraction.radius`. Returns true/false.
+
+`update(dt, player)` returns:
+- `"extracted"` when timer hits 0 and player is in zone
+- `"failed"` when timer hits 0 and player is not in zone
+- `nil` otherwise
+
+`discovered` flips true the first time `in_zone` is true — used by HUD to show the extract indicator.
+
+---
+
+## Entities
+
+### Player (`game/entities/player.lua`)
+
+- 16×16 green sprite
+- `BASE_SPEED = 120` px/s — exported so monster can read it
+- Wall collision: checks 4 corners of hitbox, resolves X and Y axes independently (wall sliding)
+- Facing: last-moved direction as `{dx, dy}`, normalised. Default `{1, 0}`.
+- `active_item()` — convenience wrapper over `inventory:active()`
+
+### Monster (`game/entities/monster.lua`)
+
+Speed constants:
+```
+WANDER_SPEED = BASE_SPEED * 0.35   -- slow creep
+CHASE_SPEED  = BASE_SPEED * 0.85   -- fast but beatable
+SPEED_BOOST  = BASE_SPEED * 0.25   -- added if Speed trait
+```
+
+State machine: `wander → alerted → chase → search → wander`
+
+Trait implementations:
+- **Sight** — LOS raycast (1 px steps), 12 cells, wall-blocked. Instant chase. Loses player after 3 s without LOS. Also triggers if player has active torch (`player:active_item().active == true`).
+- **Speed** — sets `has_speed = true`, adds `SPEED_BOOST` to all movement.
+- **Smell** — `Timer(2.5)`: every 2.5 s, unconditionally sets `last_known_pos` and goes ALERTED. Global, no range, no wall blocking.
+- **Hearing** — every frame: if `player:is_moving()` and distance < 8 cells → ALERTED.
+
+`on_kill` callback is set by RunScene to trigger the death flow.
+
+---
+
+## Items (`game/data/items.lua`)
+
+Always instantiate with `items.new(id)` — returns a fresh table. Never share item instances between slots.
+
+| Item | Value | Key behaviour |
+|------|-------|---------------|
+| Torch | 1 | Active when in any slot and `use_fn` called. Burns 90 s. Monster Sight detects glow. |
+| Flashlight | 1 | Toggle on/off with `F`. Burns 120 s total (regardless of on/off). Widens FOV cone. |
+| Flare Gun | 0 | `use_fn` returns `"extract"`. RunScene intercepts this and calls `extraction:try_start` only if player is in zone. |
+
+Items only spawn if their `value ≤ budget`. Flare gun (`value=0`) always spawns.
+
+---
+
+## Maps (`game/world/`)
+
+Both maps are 40×30 cells, cell size 32 px (1280×960 world px). Grid values: `1` = floor, `2` = wall.
+
+`map:is_wall(col, row)` returns true for walls and out-of-bounds.
+`map:world_to_cell(wx, wy)` and `map:cell_to_world(col, row)` convert between coordinate spaces.
+
+### Forest Facility
+Cross-shaped: wide horizontal hall (rows 13–17) + vertical hall (cols 18–22), four large corner rooms. Long sightlines, open.
+- Spawn: cell (4, 4) — top-left room
+- Extraction: cell (35, 25) — bottom-right room
+
+### Abandoned Hospital
+3×3 grid of rooms (A–I) connected by corridors. Dense, short sightlines, many corners.
+- Spawn: cell (5, 4) — room A (top-left)
+- Extraction: cell (33, 26) — room I (bottom-right)
+
+---
+
+## Traits (`game/data/traits.lua`)
+
+```lua
+traits.sight   -- cost 2
+traits.speed   -- cost 1
+traits.smell   -- cost 1
+traits.hearing -- cost 1
+traits.all     -- flat list for iteration
+```
+
+Trait rolling (in PlanningScene): shuffle `traits.all`, greedily pick traits while cumulative cost ≤ budget. Each trait at most once per run.
+
+---
+
+## Adding things
+
+**New item**: add a factory function in `items.lua` following the `make_torch` pattern. Give it a `value`. It will auto-appear in spawner if `value ≤ budget`. Wire `use_fn` to return a string signal if RunScene needs to react.
+
+**New trait**: add to `traits.lua` with a cost and an `apply(monster)` stub. Implement the behaviour in `monster.lua`'s update loop checking `self.has_<traitname>`.
+
+**New map**: create `game/world/map_<name>.lua` following the `fill_rect` pattern. Add it to the map picker in `planning_scene.lua` and the loader in `run_scene.lua`.
+
+**New scene**: subclass `Scene` (or just follow the same metatable pattern). Register it in `main.lua` or transition to it via `scene_ref.manager:switch(...)`.
