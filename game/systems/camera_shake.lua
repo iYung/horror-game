@@ -56,4 +56,11 @@ function CameraShake:offset()
     return ox, oy
 end
 
+-- Returns a small angle wobble in radians for first-person shake.
+-- Magnitude 6 (closest bucket) produces up to ±0.05 rad ≈ ±3°.
+function CameraShake:angle_offset()
+    if self.magnitude == 0 then return 0 end
+    return (love.math.random() * 2 - 1) * self.magnitude * 0.008
+end
+
 return CameraShake

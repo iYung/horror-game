@@ -22,7 +22,20 @@
       "Read(//Applications/**)",
       "Bash(luac -p /Users/ivan/Development/games/horror/game/systems/fov.lua /Users/ivan/Development/games/horror/game/systems/camera_shake.lua /Users/ivan/Development/games/horror/game/systems/inventory.lua /Users/ivan/Development/games/horror/game/systems/pathfinder.lua)",
       "Bash(lua -e ' *)",
-      "Bash(grep -E \"bin/lua[0-9.]?$\")"
+      "Bash(grep -E \"bin/lua[0-9.]?$\")",
+      "Bash(gh auth *)",
+      "Bash(brew install *)",
+      "Bash(ls /Users/ivan/Development/games/horror && ls /Users/ivan/Development/games/some-engine-game/ 2>/dev/null || echo \"NOT FOUND\")",
+      "Read(//Users/ivan/Development/games/some-engine-game/**)",
+      "Bash(cp /Users/ivan/Development/games/some-engine-game/core/lua/scene.lua /Users/ivan/Development/games/horror/core/lua/scene.lua)",
+      "Bash(cp /Users/ivan/Development/games/some-engine-game/core/lua/scene_manager.lua /Users/ivan/Development/games/horror/core/lua/scene_manager.lua)",
+      "Bash(cp /Users/ivan/Development/games/some-engine-game/core/lua/scene_2d.lua /Users/ivan/Development/games/horror/core/lua/scene_2d.lua)",
+      "Bash(cp /Users/ivan/Development/games/some-engine-game/core/lua/scene_3d.lua /Users/ivan/Development/games/horror/core/lua/scene_3d.lua)",
+      "Bash(cp /Users/ivan/Development/games/some-engine-game/core/lua/map.lua /Users/ivan/Development/games/horror/core/lua/map.lua)",
+      "Bash(cp /Users/ivan/Development/games/some-engine-game/core/lua/README.md /Users/ivan/Development/games/horror/core/lua/README.md)"
+    ],
+    "additionalDirectories": [
+      "/Users/ivan/Development/games/some-engine-game/core/lua"
     ]
   }
 }

@@ -1,4 +1,4 @@
-local Scene = require("core/lua/scene")
+local Scene = require("core/lua/scene_2d")
 
 local ResultScene = {}
 ResultScene.__index = ResultScene

@@ -14,7 +14,7 @@ game/
   data/         Static definitions: items and traits
   entities/     Player and monster
   scenes/       One file per screen (planning, trait reveal, run, result)
-  systems/      Stateful subsystems: FOV, inventory, pathfinder, shake, extraction
+  systems/      Stateful subsystems: inventory, pathfinder, shake, extraction (fov.lua exists but unused in 3D)
   ui/           HUD
   world/        Map grid, two map layouts, item spawner
 main.lua        Entry point — wires SceneManager and initial scene
@@ -32,12 +32,13 @@ Always use these. Never reimplement what they already do.
 | `SpriteSet` | Multiple sprites sharing a position, one active at a time |
 | `Drawer` | Registering drawables with a priority; calls `draw()` on each in order |
 | `Camera` | World-to-screen transform, smooth follow, zoom |
-| `Scene` | Base class for game states; owns a `Drawer` and a `Camera` |
-| `SceneManager` | Holds the active scene; drives `update`, `draw`, `keypressed` |
+| `Scene` | Pure lifecycle base class; no rendering state |
+| `Scene2D` | Subclass of `Scene`; owns a `Drawer` and a `Camera` — use this for all game scenes |
+| `SceneManager` | Holds the active scene; drives `update` and `draw` |
 | `Timer` | Fires after an interval, preserves remainder for accurate looping |
 | `Input` | Action-mapped keyboard polling; call `update()` once per frame |
 
-`Scene.new()` creates `self.drawer` and `self.camera`. Subclass it and override `update`/`draw`/`on_enter`/`on_exit`.
+`Scene2D.new()` creates `self.drawer` and `self.camera`. All game scenes subclass `Scene2D` and override `update`/`draw`/`on_enter`/`on_exit`.
 
 ---
 
@@ -79,62 +80,54 @@ RunConfig = {
 
 ## Phase 2 — RunScene
 
+RunScene is first-person 3D. It subclasses `Scene3D` (owns `self.raycaster`) and holds a separate `Drawer` for the 2D HUD overlay.
+
+Player position is stored in **1-indexed grid units** (`player.x`, `player.y`). All other systems (monster, extraction, items) still work in **pixel space**; `player:centre()` converts on the fly: `pixel = (gu - 1) * CELL`.
+
 ### Startup order (on_enter)
 1. Load map (`map_forest` or `map_hospital`)
 2. Create `CameraShake`
-3. Spawn `Monster` at extraction coords
-4. Spawn `Player` at map spawn; put loadout item in slot 1
-5. `ItemSpawner.spawn(map, budget)` → ground items list
-6. Create `FOV`, `Extraction`, `HUD`
+3. Spawn `Monster` at extraction coords (pixel space)
+4. Spawn `Player` at center of spawn cell (grid units): `spawn.x / CELL + 1.5`
+5. `ItemSpawner.spawn(map, budget)` → ground items list (pixel space)
+6. Create `Extraction`, `HUD`, `Drawer` (HUD registered in drawer)
 7. Set `monster.on_kill` callback → death → `ResultScene`
 8. Wrap flare gun `use_fn` to gate on `extraction:in_zone()`
-9. Register map, player, monster, ground drawable in `drawer`
 
 ### Update order (each frame)
 1. `player:update(dt)`
 2. `monster:update(dt, player)`
 3. Item timers (torch/flashlight burn down)
-4. `extraction:update(dt, player)` — check for "extracted" / "failed"
-5. `camera:follow(player:centre(), 0.85)`
-6. `shake:update(dt)` → store `_shake_ox, _shake_oy`
-7. `fov:update(px, py, dx, dy, active_item)`
-8. `monster.visible = fov:is_visible(monster centre)`
+4. `extraction:update(dt, player)` — `"extracted"` or `"failed"` both transition to `ResultScene`
+5. `shake:update(dt)` → store `_shake_angle`
 
 ### Draw order (each frame)
-1. `camera:attach()`
-2. `love.graphics.translate(shake_ox, shake_oy)` — shake is a visual-only offset
-3. `drawer:draw()` — map (priority 1), ground items (5), player + monster (10)
-4. `draw_extraction_zone()` — pulsing green circle in world space
-5. `fov:draw(active_item)` — fog overlay, drawn OVER world
-6. `camera:detach()`
-7. `hud:draw()` — screen space
+1. `raycaster:draw(map, player.x, player.y, player.angle + shake_angle, opts)` — full 3D world pass; fog range and billboard sprite list built each frame
+2. `drawer:draw()` — HUD in screen space
 
 ---
 
 ## Systems
 
-### FOV (`game/systems/fov.lua`)
+### FOV / visibility
 
-Raycasts from player position. Two passes every frame:
+The 2D FOV system has been replaced by **distance fog** in the raycaster. Walls and billboards fade to black beyond `fog_range` cells. RunScene picks the range based on active item:
 
-1. **Directional cone** — 180 rays spanning ±`ANGLE` (55°) around facing direction, up to `RANGE` (14) cells. Wall-blocked.
-2. **Ambient ring** — 36 rays, full 360°, `AMBIENT_R` (3) cells. Always on.
+| Active item | `fog_range` |
+|-------------|-------------|
+| None / inactive | 8 cells |
+| Torch (burning) | 11 cells |
+| Flashlight (on) | 14 cells |
 
-Item modifiers:
-- Flashlight on → cone widens to `FL_ANGLE` (80°), range extends to `FL_RANGE` (18)
-- Torch active → adds a 5-cell omni pass (same algorithm as ambient)
-
-Cells are stored in two sets keyed by `col*1000+row`:
-- `visible` — cleared every frame (currently lit)
-- `explored` — never cleared (has been seen)
-
-`draw()` renders black over unexplored cells, 60% black over explored-not-visible, nothing over visible.
+`fov.lua` still exists but is unused in RunScene. Monster visibility (`monster.visible`) is no longer toggled — monsters render as billboards whenever they're in front of the player and not wall-occluded.
 
 ### Camera shake (`game/systems/camera_shake.lua`)
 
-`trigger(magnitude)` starts a shake. Magnitude decays to 0 over 0.15 s. `offset()` returns a random `ox, oy` in `[-magnitude, +magnitude]`.
+`trigger(magnitude)` starts a shake. Magnitude decays to 0 over 0.15 s.
 
-**Important:** shake offset is applied as `love.graphics.translate` inside `camera:attach()/detach()`, NOT added to `camera.x/y`. Adding to the camera position causes drift because `follow()` lerps from wherever the camera currently sits.
+In 3D, shake is applied as an **angle wobble** on the raycaster view: `shake:angle_offset()` returns `±magnitude × 0.008` radians (magnitude 6 → ≈ ±3°).
+
+`offset()` (returning pixel ox/oy) still exists for potential 2D use.
 
 Monster step timer calls `shake:trigger` based on distance:
 - > 10 cells → nothing
@@ -173,10 +166,11 @@ Used only by monster WANDER/ALERTED/SEARCH states. Monster ignores wall collisio
 
 ### Player (`game/entities/player.lua`)
 
-- 16×16 green sprite
-- `BASE_SPEED = 120` px/s — exported so monster can read it
-- Wall collision: checks 4 corners of hitbox, resolves X and Y axes independently (wall sliding)
-- Facing: last-moved direction as `{dx, dy}`, normalised. Default `{1, 0}`.
+- Position stored as **1-indexed grid units** (`self.x`, `self.y`); `self.angle` is facing direction in radians
+- `BASE_SPEED = 120` px/s — exported so monster can read it; internal move speed is `BASE_SPEED / CELL ≈ 3.75` GU/s
+- Controls: `W`/`S` move forward/back along facing angle; `A`/`D` turn at 2.2 rad/s
+- Wall collision: `can_move(map, x, y)` checks 4 corners of a 0.25-cell margin around the new position
+- `centre()` converts to pixel space: `{ x = (self.x - 1) * CELL, y = (self.y - 1) * CELL }` — used by monster, extraction, and item pickup
 - `active_item()` — convenience wrapper over `inventory:active()`
 
 ### Monster (`game/entities/monster.lua`)
@@ -196,6 +190,8 @@ Trait implementations:
 - **Smell** — `Timer(2.5)`: every 2.5 s, unconditionally sets `last_known_pos` and goes ALERTED. Global, no range, no wall blocking.
 - **Hearing** — every frame: if `player:is_moving()` and distance < 8 cells → ALERTED.
 
+Kill distance: `d_px < 48` pixels (1.5 cells) — sized for 3D first-person where the monster billboard fills most of the screen at that range.
+
 `on_kill` callback is set by RunScene to trigger the death flow.
 
 ---
@@ -206,9 +202,9 @@ Always instantiate with `items.new(id)` — returns a fresh table. Never share i
 
 | Item | Value | Key behaviour |
 |------|-------|---------------|
-| Torch | 1 | Active when in any slot and `use_fn` called. Burns 90 s. Monster Sight detects glow. |
-| Flashlight | 1 | Toggle on/off with `F`. Burns 120 s total (regardless of on/off). Widens FOV cone. |
-| Flare Gun | 0 | `use_fn` returns `"extract"`. RunScene intercepts this and calls `extraction:try_start` only if player is in zone. |
+| Torch | 1 | Active when in any slot and `use_fn` called. Burns 90 s. Monster Sight detects glow. Extends fog range to 11 cells. |
+| Flashlight | 1 | Toggle on/off with `F`. Burns 120 s total (regardless of on/off). Extends fog range to 14 cells. |
+| Flare Gun | 0 | `use_fn` returns `"extract"`. RunScene intercepts this and calls `extraction:try_start` only if player is in zone. Renders as a pink billboard. |
 
 Items only spawn if their `value ≤ budget`. Flare gun (`value=0`) always spawns.
 

@@ -20,5 +20,7 @@ function love.draw()
 end
 
 function love.keypressed(key)
-    manager:keypressed(key)
+    if manager.current and manager.current.keypressed then
+        manager.current:keypressed(key)
+    end
 end

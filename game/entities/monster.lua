@@ -249,7 +249,7 @@ function Monster:update(dt, player)
     elseif self.state == "chase" then
         local chase_speed = CHASE_SPEED + (self.has_speed and SPEED_BOOST or 0)
         move_toward(self, dt, px, py, chase_speed)
-        if d_px < 16 then
+        if d_px < 48 then
             self.on_kill()
         end
 

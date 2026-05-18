@@ -21,10 +21,4 @@ function SceneManager:draw()
     if self.current then self.current:draw() end
 end
 
-function SceneManager:keypressed(key)
-    if self.current and self.current.keypressed then
-        self.current:keypressed(key)
-    end
-end
-
 return SceneManager

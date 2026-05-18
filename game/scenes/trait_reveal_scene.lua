@@ -1,4 +1,4 @@
-local Scene  = require("core/lua/scene")
+local Scene  = require("core/lua/scene_2d")
 local traits = require("game/data/traits")
 
 local TraitRevealScene = {}
