@@ -22,7 +22,7 @@ elseif watch then
         love.window.setTitle("NIGHTFALL — WATCH")
         Simulation._watching = true
         local runner     = require("test/runner")
-        local WatchScene = require("game/scenes/watch_scene")
+        local WatchScene = require("test/watch_scene")
         manager:switch(WatchScene.new(runner.collect({ "test/run_test" })))
     end
 
