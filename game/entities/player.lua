@@ -33,7 +33,7 @@ local function can_move(map, x, y)
                 map:is_wall(math.floor(x + MARGIN), math.floor(y + MARGIN)))
 end
 
-function Player.new(x, y, map)
+function Player.new(x, y, map, input_override)
     local self     = setmetatable({}, Player)
     self.x         = x       -- grid unit position (1-indexed)
     self.y         = y
@@ -44,7 +44,7 @@ function Player.new(x, y, map)
     self.on_use    = nil
     self.on_drop   = nil
     self.on_pickup = nil
-    self.input     = Input.new({
+    self.input     = input_override or Input.new({
         fwd   = {"w"},
         back  = {"s"},
         left  = {"a"},
