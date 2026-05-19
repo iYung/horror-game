@@ -32,7 +32,11 @@
       "Bash(cp /Users/ivan/Development/games/some-engine-game/core/lua/scene_2d.lua /Users/ivan/Development/games/horror/core/lua/scene_2d.lua)",
       "Bash(cp /Users/ivan/Development/games/some-engine-game/core/lua/scene_3d.lua /Users/ivan/Development/games/horror/core/lua/scene_3d.lua)",
       "Bash(cp /Users/ivan/Development/games/some-engine-game/core/lua/map.lua /Users/ivan/Development/games/horror/core/lua/map.lua)",
-      "Bash(cp /Users/ivan/Development/games/some-engine-game/core/lua/README.md /Users/ivan/Development/games/horror/core/lua/README.md)"
+      "Bash(cp /Users/ivan/Development/games/some-engine-game/core/lua/README.md /Users/ivan/Development/games/horror/core/lua/README.md)",
+      "Bash(luarocks show *)",
+      "Bash(lua5.1 -e \"print\\(package.path\\)\")",
+      "Bash(luarocks path *)",
+      "Bash(lua -e \"print\\(package.path\\)\")"
     ],
     "additionalDirectories": [
       "/Users/ivan/Development/games/some-engine-game/core/lua"

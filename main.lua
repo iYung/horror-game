@@ -8,8 +8,8 @@ end
 
 if headless then
     function love.load()
-        require("busted.runner")({ "--output=utfTerminal", "test/" })
-        love.event.quit(0)
+        local run = require("test/runner")
+        run({ "test/run_test" })
     end
 else
     local SceneManager  = require("core/lua/scene_manager")
