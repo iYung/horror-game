@@ -63,9 +63,15 @@ function Player.new(x, y, map)
 end
 
 -- Returns player centre in pixel space — used by extraction, monster, item pickup.
--- Converts grid unit position: pixel = (gu - 1) * CELL
+-- Converts grid unit position to pixel centre: pixel = (gu - 0.5) * CELL.
+-- Using -0.5 (not -1) gives the true sub-cell centre for any fractional GU value.
+-- The old formula (-1) was numerically correct only because the player always spawns
+-- at a +0.5 GU offset; this version is correct for any position.
+-- Net effect on callers: reported pixel position shifts by +16 px in x and y.
+-- Extraction radius (64 px) and item pickup radius (NEARBY_R = 48 px) are both
+-- large enough that this shift does not break zone detection.
 function Player:centre()
-    return { x = (self.x - 1) * CELL, y = (self.y - 1) * CELL }
+    return { x = (self.x - 0.5) * CELL, y = (self.y - 0.5) * CELL }
 end
 
 function Player:cell()

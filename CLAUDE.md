@@ -170,7 +170,7 @@ Used only by monster WANDER/ALERTED/SEARCH states. Monster ignores wall collisio
 - `BASE_SPEED = 120` px/s — exported so monster can read it; internal move speed is `BASE_SPEED / CELL ≈ 3.75` GU/s
 - Controls: `W`/`S` move forward/back along facing angle; `A`/`D` turn at 2.2 rad/s
 - Wall collision: `can_move(map, x, y)` checks 4 corners of a 0.25-cell margin around the new position
-- `centre()` converts to pixel space: `{ x = (self.x - 1) * CELL, y = (self.y - 1) * CELL }` — used by monster, extraction, and item pickup
+- `centre()` converts to pixel space: `{ x = (self.x - 0.5) * CELL, y = (self.y - 0.5) * CELL }` — used by monster, extraction, and item pickup. The `-0.5` offset gives the true sub-cell centre for any fractional GU position.
 - `active_item()` — convenience wrapper over `inventory:active()`
 
 ### Monster (`game/entities/monster.lua`)
@@ -190,7 +190,7 @@ Trait implementations:
 - **Smell** — `Timer(2.5)`: every 2.5 s, unconditionally sets `last_known_pos` and goes ALERTED. Global, no range, no wall blocking.
 - **Hearing** — every frame: if `player:is_moving()` and distance < 8 cells → ALERTED.
 
-Kill distance: `d_px < 48` pixels (1.5 cells) — sized for 3D first-person where the monster billboard fills most of the screen at that range.
+Kill distance: `d_px < 48` pixels (1.5 cells) — fires **unconditionally every frame** regardless of state (before the state machine runs), so the player can be killed during wander, alerted, chase, or search. The nil-guard `and self.on_kill` is present.
 
 `on_kill` callback is set by RunScene to trigger the death flow.
 
