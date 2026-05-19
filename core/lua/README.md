@@ -186,6 +186,20 @@ Action-based keyboard polling. Call `update()` once per frame before reading inp
 
 ---
 
+## SimInput
+
+Drop-in replacement for `Input` with an identical public interface, for use in simulations and tests. Pass it as the fourth argument to `Player.new` to override keyboard input.
+
+- `SimInput.new()`
+- `inject(actions)` — set `{ action = true/false }` for the next `update()` call
+- `update()` — snapshots injected state into `_down` / `_pressed` (rising-edge detection), then clears the inject table
+- `is_down(action)` — true while action was injected `true` in the last `update()`
+- `pressed(action)` — true only on the frame the action first went true
+
+Any action not present in the injected table defaults to `false`. Actions released between ticks (absent from the next `inject`) are automatically treated as not held.
+
+---
+
 ## Map
 
 A 2D grid of integer cells used for raycaster levels.
