@@ -1,0 +1,25 @@
+## Item Drops Visual Checklist
+
+- [x] Task 1 — `core/lua/raycaster.lua` — Add `v_offset` support to billboard rendering. After line 106 (`local h_half = ...`), read `local v_off = sp.v_offset or 0`. Replace lines 107–108 with: `local sy1 = math.floor(SH / 2 - h_half + h_half * v_off * 2)` and `local sy2 = math.floor(SH / 2 + h_half + h_half * v_off * 2)`. Also update the opts comment at line 21 to add `v_offset` to the sprite field description.
+
+- [x] Task 2 — `game/scenes/run_scene.lua` — Add `v_offset = 1.0` to every ground item sprite entry inside `build_sprites()` (lines 183–188). Each entry in the `for _, entry in ipairs(self.ground_items)` loop should gain the field alongside `size` and `color`. Do not add `v_offset` to the monster entry (lines 173–178) or the extraction pillar entry.
+
+- [x] Task 3 — `game/scenes/run_scene.lua` — Reduce ground item billboard size from `0.4` to `0.25`. Change the `size = 0.4` field inside the ground items loop in `build_sprites()` (line 186).
+
+- [x] Task 4 — `game/data/items.lua` — Remove the torch definition and factory. Delete the `torch` block inside `definitions` (lines 24–29). Delete the `make_torch` function in its entirety (lines 43–66). Remove the `torch = make_torch` line from `factories` (line 112). Update the module-level comment (lines 11–17) to remove the torch description line.
+
+- [x] Task 5 — `game/world/item_spawner.lua` — Remove the torch spawn block. Delete the outer `if budget >= 1 then` block that spawns torches (lines 60–67) and restructure so the flashlight spawn (currently lines 69–75) runs unconditionally when `budget >= 1` in its own `if budget >= 1 then ... end` block. Update the module-level comment (lines 4–5) to remove the torch mention.
+
+- [x] Task 6 — `game/scenes/run_scene.lua` — Remove the torch branch from `current_fog_range()`. Delete line 162 (`if item.id == "torch" and item.active then return 11 end`) entirely, leaving only the flashlight branch and the default `return 8`.
+
+- [x] Task 7 — `game/scenes/run_scene.lua` — Replace the single-boolean color branch in `build_sprites()` with a per-id color lookup table. Add the following constant table at the top of `run_scene.lua` (after the `local CELL = Map.CELL` line): `local ITEM_COLORS = { flashlight = {0.9, 0.9, 1.0, 1}, flare_gun = {1.0, 0.2, 0.8, 1}, compass = {0.2, 1.0, 0.9, 1} }` and `local ITEM_COLOR_DEFAULT = {1, 0.9, 0.3, 1}`. Inside the ground items loop in `build_sprites()`, replace the `local is_flare = ...` and `color = is_flare and {...} or {...}` lines with: `local id = entry.item and entry.item.id or ""` and `color = ITEM_COLORS[id] or ITEM_COLOR_DEFAULT`.
+
+- [x] Task 8 — `game/data/items.lua` — Add the compass item definition and factory. Inside `definitions`, add a new `compass` entry: `compass = { id = "compass", name = "Compass", value = 0 }`. Add a new `make_compass` function after `make_flare_gun`: it copies `definitions.compass` fields into a new table and sets `self.use_fn = function(player, world) end` (no-op). Register `compass = make_compass` in `factories`. Update the module-level comment to describe the compass.
+
+- [x] Task 9 — `game/world/item_spawner.lua` — Add compass spawn logic. After the flare gun spawn block (after line 102), add a new block that builds a `compass_pool` of walkable cells that are both more than 10 cells from spawn and not already in `reserved` (same pattern as `flare_pool`). If the pool is empty, fall back to any unreserved walkable cell. If the pool is still non-empty, pick one random cell, mark it reserved, and insert `{ x = wx, y = wy, item = Items.new("compass") }` into `ground`. Update the module-level comment to mention compass.
+
+- [x] Task 10 — `game/ui/hud.lua` — Add a `player` parameter to `HUD.new`. Change the signature from `HUD.new(inventory, extraction)` to `HUD.new(inventory, extraction, player)` and add `self.player = player` inside the constructor body (after line 44).
+
+- [x] Task 11 — `game/scenes/run_scene.lua` — Update the `HUD.new` call in `RunScene:on_enter()` to pass `self.player` as the third argument. Change line 72 from `HUD.new(self.player.inventory, self.extraction)` to `HUD.new(self.player.inventory, self.extraction, self.player)`.
+
+- [x] Task 12 — `game/ui/hud.lua` — Add the compass bearing indicator to `HUD:draw()`. At the end of `HUD:draw()`, before the `love.graphics.setFont(prev_font)` reset line, insert a block that: checks `self.inventory:active()` for an item with `id == "compass"`; if found, computes `pc = self.player:centre()`, reads `ez = self.extraction._zone`, computes `dx = ez.x - pc.x` and `dy = ez.y - pc.y`, then `bearing = math.atan2(dy, dx)`, then `relative = (bearing - self.player.angle + math.pi) % (math.pi * 2) - math.pi`; converts to integer degrees with `math.floor(math.deg(relative))`; formats the label as `"COMPASS  " .. (deg >= 0 and ("+" .. deg) or tostring(deg)) .. "°"`; sets color to `{0.2, 1.0, 0.9, 1}` and prints the label using `EXTRACT_FONT` centered horizontally at `y = 8` (i.e., `x = (1280 - EXTRACT_FONT:getWidth(label)) / 2`).

@@ -18,8 +18,9 @@ end
 --     .fov        number   horizontal FOV in radians (default π/3)
 --     .fog_range  number   cells until fully black   (default 14)
 --     .sprites    table    list of billboard sprites, each:
---                            { x, y, size=1, color={r,g,b,a} }
+--                            { x, y, size=1, color={r,g,b,a}, v_offset=0 }
 --                          x/y in grid units; size scales height relative to wall height
+--                          v_offset (default 0): positive values shift the sprite down toward the floor
 function Raycaster:draw(map, px, py, angle, opts)
     opts = opts or {}
     local fov       = opts.fov or (math.pi / 3)
@@ -104,8 +105,9 @@ function Raycaster:draw(map, px, py, angle, opts)
                 if fog > 0.01 then
                     local size   = sp.size or 1.0
                     local h_half = math.floor(SH / tz * size / 2)
-                    local sy1    = math.floor(SH / 2 - h_half)
-                    local sy2    = math.floor(SH / 2 + h_half)
+                    local v_off  = sp.v_offset or 0
+                    local sy1    = math.floor(SH / 2 - h_half + h_half * v_off * 2)
+                    local sy2    = math.floor(SH / 2 + h_half + h_half * v_off * 2)
                     local sx_cen = math.floor(SW / 2 * (1 + tx / tz))
                     local sx1    = sx_cen - h_half
                     local sx2    = sx_cen + h_half

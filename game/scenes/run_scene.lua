@@ -10,6 +10,13 @@ local Map         = require("game/world/map")
 
 local CELL = Map.CELL
 
+local ITEM_COLORS = {
+    flashlight = {0.9, 0.9, 1.0, 1},
+    flare_gun  = {1.0, 0.2, 0.8, 1},
+    compass    = {0.2, 1.0, 0.9, 1},
+}
+local ITEM_COLOR_DEFAULT = {1, 0.9, 0.3, 1}
+
 local RunScene = setmetatable({}, { __index = Scene3D })
 RunScene.__index = RunScene
 
@@ -69,7 +76,7 @@ function RunScene:on_enter()
 
     self.ground_items = ItemSpawner.spawn(map, self.run_config.budget)
     self.extraction   = Extraction.new(map)
-    self.hud          = HUD.new(self.player.inventory, self.extraction)
+    self.hud          = HUD.new(self.player.inventory, self.extraction, self.player)
 
     -- Drawer holds 2D HUD overlay only; 3D world is rendered via self.raycaster
     self.drawer = Drawer.new()
@@ -159,7 +166,6 @@ local function current_fog_range(player)
     local item = player:active_item()
     if item then
         if item.id == "flashlight" and item.active and item.on then return 14 end
-        if item.id == "torch"      and item.active              then return 11 end
     end
     return 8
 end
@@ -179,12 +185,14 @@ local function build_sprites(self)
 
     -- Ground items
     for _, entry in ipairs(self.ground_items) do
-        local is_flare = entry.item and entry.item.id == "flare_gun"
+        local id = entry.item and entry.item.id or ""
+        local color = ITEM_COLORS[id] or ITEM_COLOR_DEFAULT
         table.insert(sprites, {
-            x     = entry.x / CELL + 1,
-            y     = entry.y / CELL + 1,
-            size  = 0.4,
-            color = is_flare and {1, 0.2, 0.8, 1} or {1, 0.9, 0.3, 1},
+            x        = entry.x / CELL + 1,
+            y        = entry.y / CELL + 1,
+            size     = 0.25,
+            color    = color,
+            v_offset = 1.0,
         })
     end
 

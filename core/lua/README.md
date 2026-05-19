@@ -214,6 +214,13 @@ DDA-based first-person column renderer with z-buffered billboard sprites and dis
 | `fog_range` | `14` | Cells until walls/sprites fade to black |
 | `sprites` | `{}` | List of billboard sprites (see below) |
 
-Each sprite: `{ x, y, size=1, color={r,g,b,a} }` where `x`/`y` are grid units and `size` scales height relative to wall height at the same distance.
+Each sprite field:
+
+| Field | Default | Meaning |
+|-------|---------|---------|
+| `x`, `y` | — | Position in grid units (required) |
+| `size` | `1` | Billboard height relative to wall height at the same distance |
+| `color` | `{1,1,1,1}` | RGBA tint, attenuated by fog |
+| `v_offset` | `0` | Vertical offset in half-heights; positive values shift the sprite down toward the floor (e.g. `1.0` places the bottom of the billboard at the floor line) |
 
 Internally builds a per-column z-buffer during the wall pass; sprites are drawn back-to-front and clipped against it. Resets `love.graphics` colour to white after drawing.

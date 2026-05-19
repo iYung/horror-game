@@ -90,20 +90,24 @@ Player position is stored in **1-indexed grid units** (`player.x`, `player.y`). 
 3. Spawn `Monster` at extraction coords (pixel space)
 4. Spawn `Player` at center of spawn cell (grid units): `spawn.x / CELL + 1.5`
 5. `ItemSpawner.spawn(map, budget)` → ground items list (pixel space)
-6. Create `Extraction`, `HUD`, `Drawer` (HUD registered in drawer)
+6. Create `Extraction`, `HUD` (via `HUD.new(inventory, extraction, player)`), `Drawer` (HUD registered in drawer)
 7. Set `monster.on_kill` callback → death → `ResultScene`
 8. Wrap flare gun `use_fn` to gate on `extraction:in_zone()`
 
 ### Update order (each frame)
 1. `player:update(dt)`
 2. `monster:update(dt, player)`
-3. Item timers (torch/flashlight burn down)
+3. Item timers (flashlight burns down)
 4. `extraction:update(dt, player)` — `"extracted"` or `"failed"` both transition to `ResultScene`
 5. `shake:update(dt)` → store `_shake_angle`
 
 ### Draw order (each frame)
 1. `raycaster:draw(map, player.x, player.y, player.angle + shake_angle, opts)` — full 3D world pass; fog range and billboard sprite list built each frame
 2. `drawer:draw()` — HUD in screen space
+
+### Billboard sprites
+
+Each entry in the `sprites` list passed to the raycaster supports a `v_offset` field (default `0`). Positive values shift the billboard down toward the floor, measured in half-heights. Ground items use `size = 0.25` and `v_offset = 1.0` so they appear as small markers at floor level.
 
 ---
 
@@ -116,7 +120,6 @@ The 2D FOV system has been replaced by **distance fog** in the raycaster. Walls 
 | Active item | `fog_range` |
 |-------------|-------------|
 | None / inactive | 8 cells |
-| Torch (burning) | 11 cells |
 | Flashlight (on) | 14 cells |
 
 `fov.lua` still exists but is unused in RunScene. Monster visibility (`monster.visible`) is no longer toggled — monsters render as billboards whenever they're in front of the player and not wall-occluded.
@@ -185,7 +188,7 @@ SPEED_BOOST  = BASE_SPEED * 0.25   -- added if Speed trait
 State machine: `wander → alerted → chase → search → wander`
 
 Trait implementations:
-- **Sight** — LOS raycast (1 px steps), 12 cells, wall-blocked. Instant chase. Loses player after 3 s without LOS. Also triggers if player has active torch (`player:active_item().active == true`).
+- **Sight** — LOS raycast (1 px steps), 12 cells, wall-blocked. Instant chase. Loses player after 3 s without LOS.
 - **Speed** — sets `has_speed = true`, adds `SPEED_BOOST` to all movement.
 - **Smell** — `Timer(2.5)`: every 2.5 s, unconditionally sets `last_known_pos` and goes ALERTED. Global, no range, no wall blocking.
 - **Hearing** — every frame: if `player:is_moving()` and distance < 8 cells → ALERTED.
@@ -202,11 +205,11 @@ Always instantiate with `items.new(id)` — returns a fresh table. Never share i
 
 | Item | Value | Key behaviour |
 |------|-------|---------------|
-| Torch | 1 | Active when in any slot and `use_fn` called. Burns 90 s. Monster Sight detects glow. Extends fog range to 11 cells. |
 | Flashlight | 1 | Toggle on/off with `F`. Burns 120 s total (regardless of on/off). Extends fog range to 14 cells. |
 | Flare Gun | 0 | `use_fn` returns `"extract"`. RunScene intercepts this and calls `extraction:try_start` only if player is in zone. Renders as a pink billboard. |
+| Compass | 0 | `use_fn` is a no-op. While the compass is the active item, HUD shows a bearing indicator pointing toward the extraction zone. |
 
-Items only spawn if their `value ≤ budget`. Flare gun (`value=0`) always spawns.
+Items only spawn if their `value ≤ budget`. Flare gun and compass (`value=0`) always spawn.
 
 ---
 
@@ -274,7 +277,7 @@ Trait rolling (in PlanningScene): shuffle `traits.all`, greedily pick traits whi
 
 ## Adding things
 
-**New item**: add a factory function in `items.lua` following the `make_torch` pattern. Give it a `value`. It will auto-appear in spawner if `value ≤ budget`. Wire `use_fn` to return a string signal if RunScene needs to react.
+**New item**: add a factory function in `items.lua` following the `make_flashlight` pattern. Give it a `value`. It will auto-appear in spawner if `value ≤ budget`. Wire `use_fn` to return a string signal if RunScene needs to react.
 
 **New trait**: add to `traits.lua` with a cost and an `apply(monster)` stub. Implement the behaviour in `monster.lua`'s update loop checking `self.has_<traitname>`.
 

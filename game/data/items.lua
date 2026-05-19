@@ -8,25 +8,18 @@
 --   value   number    budget cost; item only spawns if value <= run budget
 --   use_fn  function  called when player presses F with item active
 --
--- Torch:      value=1. Becomes active on first use. Burns out after 90 s (timer starts
---             on use). While active, FOV gains a 5-cell omni ring and monster Sight
---             detects the glow without needing LOS to the player.
 -- Flashlight: value=1. Toggled on/off each F press. 120 s battery total regardless of
 --             on/off state. While on+active, FOV cone widens to 80°, range extends to 18.
 -- Flare gun:  value=0 (always spawns). use_fn returns "extract". RunScene intercepts
 --             this string and calls extraction:try_start only if player is in zone.
+-- Compass:    value=0 (always spawns). use_fn is a no-op; bearing to extraction shown
+--             in HUD while the compass is the active item.
 
 local Timer = require("core/lua/timer")
 
 local items = {}
 
 local definitions = {
-    torch = {
-        id       = "torch",
-        name     = "Torch",
-        value    = 1,
-        duration = 90,
-    },
     flashlight = {
         id       = "flashlight",
         name     = "Flashlight",
@@ -38,32 +31,12 @@ local definitions = {
         name  = "Flare Gun",
         value = 0,
     },
+    compass = {
+        id    = "compass",
+        name  = "Compass",
+        value = 0,
+    },
 }
-
-local function make_torch()
-    local self = {}
-    for k, v in pairs(definitions.torch) do self[k] = v end
-    self.active   = false
-    self.timer    = nil
-    self.elapsed  = 0
-
-    self.use_fn = function(player, world)
-        if self.timer == nil then
-            self.timer = Timer.new(self.duration)
-        end
-        self.active = true
-    end
-
-    self.update = function(dt, inventory)
-        if self.timer == nil then return end
-        self.elapsed = self.elapsed + dt
-        if self.timer:update(dt) then
-            inventory:remove_item_by_ref(self)
-        end
-    end
-
-    return self
-end
 
 local function make_flashlight()
     local self = {}
@@ -108,10 +81,19 @@ local function make_flare_gun()
     return self
 end
 
+local function make_compass()
+    local self = {}
+    for k, v in pairs(definitions.compass) do self[k] = v end
+
+    self.use_fn = function(player, world) end
+
+    return self
+end
+
 local factories = {
-    torch      = make_torch,
     flashlight = make_flashlight,
     flare_gun  = make_flare_gun,
+    compass    = make_compass,
 }
 
 function items.new(id)

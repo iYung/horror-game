@@ -38,10 +38,11 @@ local function truncate_to_fit(text, font, max_w)
     return truncated .. ".."
 end
 
-function HUD.new(inventory, extraction)
+function HUD.new(inventory, extraction, player)
     local self = setmetatable({}, HUD)
     self.inventory  = inventory
     self.extraction = extraction
+    self.player     = player
     return self
 end
 
@@ -101,6 +102,22 @@ function HUD:draw()
         local ey = 720 - EXTRACT_BOTTOM - th
         love.graphics.setColor(1, 1, 1, alpha)
         love.graphics.print(label, ex, ey)
+    end
+
+    local active_item = self.inventory:active()
+    if active_item and active_item.id == "compass" then
+        local pc = self.player:centre()
+        local ez = self.extraction._zone
+        local dx = ez.x - pc.x
+        local dy = ez.y - pc.y
+        local bearing  = math.atan2(dy, dx)
+        local relative = (bearing - self.player.angle + math.pi) % (math.pi * 2) - math.pi
+        local deg      = math.floor(math.deg(relative))
+        local label    = "COMPASS  " .. (deg >= 0 and ("+" .. deg) or tostring(deg)) .. "\xc2\xb0"
+        local font     = EXTRACT_FONT
+        love.graphics.setFont(font)
+        love.graphics.setColor(0.2, 1.0, 0.9, 1)
+        love.graphics.print(label, (1280 - font:getWidth(label)) / 2, 8)
     end
 
     love.graphics.setFont(prev_font)
