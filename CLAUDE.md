@@ -272,12 +272,61 @@ Trait rolling (in PlanningScene): shuffle `traits.all`, greedily pick traits whi
 
 ---
 
+## Testing
+
+### Commands
+
+```
+love . -- --headless    # terminal output; exits 0 (all pass) or 1 (any fail)
+love . -- --watch       # same tests rendered live in 3D; press -/= to change sim speed
+```
+
+In `--watch` mode each test coroutine drives the simulation frame-by-frame and the raycaster renders every step. Press any key on the summary screen to quit.
+
+### File layout
+
+```
+test/
+  runner.lua       Minimal busted-compatible framework — describe / it / assert.*
+  run_test.lua     All game scenarios; one it() per scenario
+  watch_scene.lua  Scene3D subclass that renders Simulation._current each frame
+```
+
+`game/simulation.lua` is the headless run harness. It mirrors RunScene's setup and update loop with no rendering or scene management. The player is driven by `SimInput` (core/lua/sim_input.lua) instead of the keyboard.
+
+```lua
+local sim   = Simulation.new(run_config)
+local state = sim:step(dt, actions)      -- one tick; returns nil once outcome is set
+local final = sim:run_until(pred, opts)  -- loops until pred(state) or max_seconds
+```
+
+`actions` keys: `fwd`, `back`, `left`, `right`, `use`, `pickup`.
+
+State snapshot: `outcome`, `tick`, `player.{x,y,angle}`, `monster.{x,y,state}`, `extraction.{active,discovered,time_remaining}`.
+
+### The rule
+
+Every change gets two things: **run the full suite** (`--headless`) to catch regressions, and **add at least one new `it()`** in `test/run_test.lua` for the new behaviour. Both steps are required — running without adding leaves the new code untested; adding without running misses breakage in existing paths.
+
+### What to add tests for
+
+| Change | Run to catch regressions | New test to add |
+|--------|--------------------------|-----------------|
+| New trait | All existing trait tests | Positive case (stimulus → correct state within known time). If trigger is conditional (like hearing needing movement), add a negative case too. Mirror smell/hearing/sight tests. |
+| New item | Kill + extraction tests | `use_fn` returns the right signal; interaction with extraction or inventory works. |
+| Monster update order | Kill test (ordering is load-bearing) | None required if existing kill test still passes. |
+| Extraction logic | Both extraction tests (success + failed) | None required if both still pass. |
+| New map | Smoke-run: `Simulation.new({ map_id = "yourmap", ... }):step(1/60)` | At minimum, that smoke step should not error. Add spawn/extraction coord checks if coords were non-obvious. |
+| Player movement / collision | Hearing trait tests (depend on `is_moving`) | Step sequence that injects `fwd` and asserts `player.x/y` changed. |
+
+---
+
 ## Adding things
 
-**New item**: add a factory function in `items.lua` following the `make_torch` pattern. Give it a `value`. It will auto-appear in spawner if `value ≤ budget`. Wire `use_fn` to return a string signal if RunScene needs to react.
+**New item**: add a factory function in `items.lua` following the `make_torch` pattern. Give it a `value`. It will auto-appear in spawner if `value ≤ budget`. Wire `use_fn` to return a string signal if RunScene needs to react. Add a test in `test/run_test.lua`.
 
-**New trait**: add to `traits.lua` with a cost and an `apply(monster)` stub. Implement the behaviour in `monster.lua`'s update loop checking `self.has_<traitname>`.
+**New trait**: add to `traits.lua` with a cost and an `apply(monster)` stub. Implement the behaviour in `monster.lua`'s update loop checking `self.has_<traitname>`. Add a test in `test/run_test.lua` — see existing trait tests as a template.
 
-**New map**: create `game/world/map_<name>.lua` following the `fill_rect` pattern. Add it to the map picker in `planning_scene.lua` and the loader in `run_scene.lua`.
+**New map**: create `game/world/map_<name>.lua` following the `fill_rect` pattern. Add it to the map picker in `planning_scene.lua` and the loader in `run_scene.lua`. Also add it to `Simulation`'s `load_map` in `game/simulation.lua` so it can be tested headlessly.
 
 **New scene**: subclass `Scene` (or just follow the same metatable pattern). Register it in `main.lua` or transition to it via `scene_ref.manager:switch(...)`.
