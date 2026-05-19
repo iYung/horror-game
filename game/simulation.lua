@@ -21,6 +21,8 @@ local CELL = Map.CELL
 
 local Simulation = {}
 Simulation.__index = Simulation
+Simulation._current  = nil
+Simulation._watching = false
 
 local function load_map(map_id)
     if map_id == "hospital" then
@@ -56,13 +58,15 @@ function Simulation.new(run_config)
     self.ground_items = ItemSpawner.spawn(map, run_config.budget)
     self.extraction   = Extraction.new(map)
 
-    self._outcome = nil
-    self._tick    = 0
+    self._outcome  = nil
+    self._tick     = 0
+    self._yield_fn = Simulation._watching and coroutine.yield or nil
 
     self.monster.on_kill = function()
         self._outcome = "death"
     end
 
+    Simulation._current = self
     return self
 end
 
@@ -97,6 +101,8 @@ function Simulation:step(dt, actions)
     self._tick = self._tick + dt
 
     self.shake:update(dt)
+
+    if self._yield_fn then self._yield_fn() end
 
     return self:state()
 end

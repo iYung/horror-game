@@ -71,7 +71,7 @@ function assert.is_not_nil(v, msg)
     end
 end
 
--- Run a list of test module paths (no .lua extension).
+-- Run a list of test module paths synchronously (headless mode).
 local function run(test_files)
     print("\n=== NIGHTFALL headless tests ===\n")
     for _, path in ipairs(test_files) do
@@ -93,4 +93,37 @@ local function run(test_files)
     end
 end
 
-return run
+-- Collect tests as {name, fn} pairs without running them (watch mode).
+local function collect(test_files)
+    local tests  = {}
+    local _suite = ""
+
+    local orig_describe = describe
+    local orig_it       = it
+
+    function describe(name, fn)
+        _suite = name
+        fn()
+        _suite = ""
+    end
+
+    function it(name, fn)
+        local label = _suite ~= "" and (_suite .. " > " .. name) or name
+        table.insert(tests, { name = label, fn = fn })
+    end
+
+    for _, path in ipairs(test_files) do
+        local ok, err = pcall(require, path)
+        if not ok then
+            local msg = tostring(err)
+            table.insert(tests, { name = path .. " (load error)", fn = function() error(msg) end })
+        end
+    end
+
+    describe = orig_describe
+    it       = orig_it
+
+    return tests
+end
+
+return { run = run, collect = collect }
