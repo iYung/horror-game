@@ -53,6 +53,44 @@ describe("Simulation", function()
         assert.are.equal("extracted", state.outcome)
     end)
 
+    it("hearing trait alerts monster when player moves nearby", function()
+        local sim = Simulation.new(make_config({ monster_traits = { "hearing" } }))
+
+        -- 96 px north of player centre (192,160), well inside the 8-cell (256 px) hearing range
+        sim.monster.x = 192
+        sim.monster.y = 64
+
+        local state = sim:step(1 / 60, { fwd = true })
+
+        assert.are.equal("alerted", state.monster.state)
+    end)
+
+    it("hearing trait does not alert when player is still", function()
+        local sim = Simulation.new(make_config({ monster_traits = { "hearing" } }))
+
+        sim.monster.x   = 192
+        sim.monster.y   = 64
+        sim.monster.on_kill = nil  -- prevent kill from ending the run if monster wanders close
+
+        local state = sim:run_until(function(s)
+            return s.monster.state ~= "wander"
+        end, { max_seconds = 2 })
+
+        assert.are.equal("wander", state.monster.state)
+    end)
+
+    it("sight trait chases player in line of sight", function()
+        local sim = Simulation.new(make_config({ monster_traits = { "sight" } }))
+
+        -- 64 px east of player centre in the same room, unobstructed horizontal LOS
+        sim.monster.x = 256
+        sim.monster.y = 160
+
+        local state = sim:step(1 / 60)
+
+        assert.are.equal("chase", state.monster.state)
+    end)
+
     it("smell trait alerts monster within 3 seconds", function()
         -- Monster starts far from player; no LOS, player not moving.
         -- Only the smell timer (fires at 2.5 s) should trigger alerted.
