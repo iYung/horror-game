@@ -164,6 +164,8 @@ function Monster:update(dt, player)
     local px, py   = pc.x, pc.y
     local d_px     = dist(mx, my, px, py)
 
+    if d_px < 48 and self.on_kill then self.on_kill() return end
+
     if self.step_timer:update(dt) then
         local cells = d_px / CELL
         if cells <= 3 then
@@ -249,9 +251,6 @@ function Monster:update(dt, player)
     elseif self.state == "chase" then
         local chase_speed = CHASE_SPEED + (self.has_speed and SPEED_BOOST or 0)
         move_toward(self, dt, px, py, chase_speed)
-        if d_px < 48 then
-            self.on_kill()
-        end
 
     elseif self.state == "search" then
         local search_speed = WANDER_SPEED + (self.has_speed and SPEED_BOOST or 0)
