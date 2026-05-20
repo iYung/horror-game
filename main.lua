@@ -7,7 +7,7 @@ end
 
 if headless then
     function love.load()
-        require("test/runner").run({ "test/run_test" })
+        require("test/runner").run({ "test/run_test", "test/torches_test" })
     end
 elseif watch then
     local SceneManager = require("core/lua/scene_manager")

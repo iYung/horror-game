@@ -20,11 +20,12 @@ Map.CELL = 32
 Map.COLS = 40
 Map.ROWS = 30
 
-function Map.new(grid, spawn, extraction)
+function Map.new(grid, spawn, extraction, torches)
     local self = setmetatable({}, Map)
     self.grid       = grid
     self.spawn      = spawn
     self.extraction = extraction
+    self.torches    = torches or {}
     return self
 end
 
