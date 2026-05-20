@@ -44,11 +44,11 @@ All questions resolved. Kept here as a decision log.
 **10. Can you drop items or swap with ground items?**
 **RESOLVED: Both. Player can drop held items and swap inventory items with ground items.**
 
-**11. Do flashlight and torch run out?**
-**RESOLVED: Both are consumables with limited duration.**
+**11. Does the flashlight run out?**
+**RESOLVED: Yes. The flashlight is a consumable with a 120 s battery.**
 
-**12. Can a sighted monster detect the torch's glow without player LOS?**
-**RESOLVED: Yes. Torch glow is visible to a sighted monster even through walls.**
+**12. Can a sighted monster detect the flashlight's glow without player LOS?**
+**RESOLVED: Yes. Flashlight glow (when on) is visible to a sighted monster even through walls.**
 
 **13. Does the stash start with anything?**
 **RESOLVED: Nothing. First run the player goes in empty.**
@@ -80,7 +80,7 @@ All questions resolved. Kept here as a decision log.
 **RESOLVED: In-memory for v1. Disk save (love.filesystem) is a future consideration.**
 
 **20. Does the difficulty budget affect loot?**
-**RESOLVED: Yes. Each item has a point value (e.g. torch = 1 pt). An item can only spawn if its value is ≤ the run's budget. Higher difficulty unlocks higher-value loot.**
+**RESOLVED: Yes. Each item has a point value (e.g. flashlight = 1 pt). An item can only spawn if its value is ≤ the run's budget. Higher difficulty unlocks higher-value loot.**
 
 ---
 

@@ -68,7 +68,7 @@ Before the player gains control, a full-screen card lists:
 - **Currently visible cells** are fully lit.
 - Visibility is a cone/circle raycast from the player, blocked by walls.
 - The monster is only drawn when inside a currently-visible cell.
-- Flashlight item extends the cone; torch item reveals a small static ring around the player.
+- Flashlight item extends the cone.
 
 ### Player
 
@@ -88,11 +88,10 @@ Each item has a **point value** — it can only spawn on a run if its value ≤ 
 
 | Item | Value | Effect |
 |------|-------|--------|
-| Torch | 1 pt | Lights a small omnidirectional radius (~3 cells) around the player. Consumable — burns out after a fixed duration. A sighted monster can see the torch's glow through walls. |
-| Flashlight | 1 pt | Widens LOS cone to ~120°, extended range. Consumable — battery runs out after a fixed duration. Toggle on/off. |
+| Flashlight | 1 pt | Widens LOS cone to ~120°, extended range. Consumable — battery runs out after a fixed duration. Toggle on/off. While on, triggers Sight detection through walls. |
 | Flare Gun | — | Always spawns. Single-use. Required to trigger extraction. Spawns randomly each run, guaranteed not near the player spawn. |
 
-Flashlight and Torch spawn randomly on the ground (3–6 each, budget-gated). Flare Gun has one spawn per run.
+Flashlights spawn randomly on the ground (3–5 copies, budget-gated). Flare Gun has one spawn per run.
 
 ### Extraction
 

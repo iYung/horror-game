@@ -7,7 +7,7 @@
 -- Two passes per frame:
 --   1. Directional cone  — facing direction ± ANGLE, up to RANGE cells, wall-blocked.
 --   2. Ambient ring      — full 360°, AMBIENT_R cells, always on.
--- Item modifiers: flashlight widens/extends the cone; torch adds a 5-cell omni pass.
+-- Item modifiers: flashlight widens/extends the cone.
 --
 -- Usage:
 --   fov = FOV.new(map)
@@ -24,7 +24,6 @@ FOV.__index = FOV
 FOV.RANGE      = 14
 FOV.ANGLE      = math.rad(55)
 FOV.AMBIENT_R  = 3
-FOV.TORCH_R    = 5
 FOV.FL_RANGE   = 18
 FOV.FL_ANGLE   = math.rad(80)
 
@@ -64,7 +63,6 @@ function FOV:update(px, py, facing_dx, facing_dy, active_item)
     self.facing_dx = facing_dx
     self.facing_dy = facing_dy
 
-    local torch_active = active_item and active_item.id == "torch" and active_item.active
     local fl_active    = active_item and active_item.id == "flashlight" and active_item.active and active_item.on
 
     local base_angle = math.atan2(facing_dy, facing_dx)
@@ -109,29 +107,6 @@ function FOV:update(px, py, facing_dx, facing_dy, active_item)
         end
     end
 
-    if torch_active then
-        local torch_px = FOV.TORCH_R * CELL
-        local omni_steps = torch_px / STEP
-        local omni_rays  = 36
-        for i = 0, omni_rays - 1 do
-            local angle = (2 * math.pi) * (i / omni_rays)
-            local rdx   = math.cos(angle)
-            local rdy   = math.sin(angle)
-            for s = 0, omni_steps do
-                local wx = px + rdx * s * STEP
-                local wy = py + rdy * s * STEP
-                local col, row = self.map:world_to_cell(wx, wy)
-                local k = key(col, row)
-                self.visible[k]  = true
-                self.explored[k] = true
-                if self.map:is_wall(col, row) then
-                    break
-                end
-            end
-        end
-    end
-
-    self._torch_active = torch_active
 end
 
 function FOV:is_visible(wx, wy)

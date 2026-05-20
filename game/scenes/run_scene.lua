@@ -162,9 +162,7 @@ local function build_lights(self)
     end
     local item = self.player:active_item()
     if item then
-        if item.id == "torch" and item.active then
-            table.insert(lights, { x = self.player.x, y = self.player.y, radius = 4, intensity = 0.9 })
-        elseif item.id == "flashlight" and item.active and item.on then
+        if item.id == "flashlight" and item.active and item.on then
             table.insert(lights, { x = self.player.x, y = self.player.y, radius = 6, intensity = 1.0 })
         end
     end
