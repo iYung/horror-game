@@ -36,9 +36,7 @@ function Raycaster:draw(map, px, py, angle, opts)
     local plane_x  = -dir_y * half_tan
     local plane_y  =  dir_x * half_tan
 
-    -- Ceiling and floor — flat colour, drawn once before the wall pass
-    love.graphics.setColor(0.06, 0.04, 0.06, 1)
-    love.graphics.rectangle("fill", 0, 0, SW, SH / 2)
+    -- Floor — flat colour, drawn once before the wall pass
     love.graphics.setColor(0.10, 0.08, 0.08, 1)
     love.graphics.rectangle("fill", 0, SH / 2, SW, SH / 2)
 
