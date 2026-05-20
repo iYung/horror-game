@@ -154,14 +154,21 @@ function RunScene:update(dt)
     self._shake_angle = self.shake:angle_offset()
 end
 
--- Fog range in grid cells based on active item
-local function current_fog_range(player)
-    local item = player:active_item()
-    if item then
-        if item.id == "flashlight" and item.active and item.on then return 14 end
-        if item.id == "torch"      and item.active              then return 11 end
+-- Build point-light list for the current frame
+local function build_lights(self)
+    local lights = {}
+    for _, t in ipairs(self.map.torches) do
+        table.insert(lights, { x = t.col + 0.5, y = t.row + 0.5, radius = 6, intensity = 1.0 })
     end
-    return 8
+    local item = self.player:active_item()
+    if item then
+        if item.id == "torch" and item.active then
+            table.insert(lights, { x = self.player.x, y = self.player.y, radius = 4, intensity = 0.9 })
+        elseif item.id == "flashlight" and item.active and item.on then
+            table.insert(lights, { x = self.player.x, y = self.player.y, radius = 6, intensity = 1.0 })
+        end
+    end
+    return lights
 end
 
 -- Build billboard sprite list for the current frame
@@ -201,6 +208,15 @@ local function build_sprites(self)
         color = {0.1, 1.0, 0.2, alpha},
     })
 
+    for _, t in ipairs(self.map.torches) do
+        table.insert(sprites, {
+            x     = t.col + 0.5,
+            y     = t.row + 0.5,
+            size  = 0.25,
+            color = {1.0, 0.65, 0.15, 1},
+        })
+    end
+
     return sprites
 end
 
@@ -210,7 +226,7 @@ function RunScene:draw()
         self.player.x, self.player.y,
         self.player.angle + self._shake_angle,
         {
-            fog_range = current_fog_range(self.player),
+            lights    = build_lights(self),
             sprites   = build_sprites(self),
         }
     )

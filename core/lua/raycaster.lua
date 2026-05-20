@@ -16,15 +16,18 @@ end
 --   angle     : facing direction in radians
 --   opts      : optional table
 --     .fov        number   horizontal FOV in radians (default π/3)
---     .fog_range  number   cells until fully black   (default 14)
+--     .lights     table    list of point lights, each:
+--                            { x, y, radius, intensity }
+--                          x/y in 1-indexed grid units; radius in cells
+--                          if nil/empty, everything is pitch black
 --     .sprites    table    list of billboard sprites, each:
 --                            { x, y, size=1, color={r,g,b,a} }
 --                          x/y in grid units; size scales height relative to wall height
 function Raycaster:draw(map, px, py, angle, opts)
     opts = opts or {}
-    local fov       = opts.fov or (math.pi / 3)
-    local fog_range = opts.fog_range or 14
-    local sprites   = opts.sprites or {}
+    local fov     = opts.fov or (math.pi / 3)
+    local lights  = opts.lights or {}
+    local sprites = opts.sprites or {}
 
     local dir_x    = math.cos(angle)
     local dir_y    = math.sin(angle)
@@ -33,9 +36,7 @@ function Raycaster:draw(map, px, py, angle, opts)
     local plane_x  = -dir_y * half_tan
     local plane_y  =  dir_x * half_tan
 
-    -- Ceiling and floor
-    love.graphics.setColor(0.06, 0.04, 0.06, 1)
-    love.graphics.rectangle("fill", 0, 0, SW, SH / 2)
+    -- Floor — flat colour, drawn once before the wall pass
     love.graphics.setColor(0.10, 0.08, 0.08, 1)
     love.graphics.rectangle("fill", 0, SH / 2, SW, SH / 2)
 
@@ -68,11 +69,21 @@ function Raycaster:draw(map, px, py, angle, opts)
             local perp = side == 0 and (sdx - ddx) or (sdy - ddy)
             self._zbuf[col] = perp
 
-            local fog = math.max(0.0, 1.0 - perp / fog_range)
-            local br  = (side == 1 and 0.45 or 0.7) * fog
-            local h   = math.floor(SH / perp)
-            local y1  = math.floor(SH / 2 - h / 2)
-            local y2  = math.floor(SH / 2 + h / 2)
+            local brightness = 0
+            for _, light in ipairs(lights) do
+                local hx = mx + 0.5
+                local hy = my + 0.5
+                local dx = hx - light.x
+                local dy = hy - light.y
+                local dist = math.sqrt(dx*dx + dy*dy)
+                brightness = brightness + math.max(0, 1 - dist / light.radius) * light.intensity
+            end
+            brightness = math.min(brightness, 1)
+
+            local br = (side == 1 and 0.45 or 0.7) * brightness
+            local h  = math.floor(SH / perp)
+            local y1 = math.floor(SH / 2 - h / 2)
+            local y2 = math.floor(SH / 2 + h / 2)
             love.graphics.setColor(br * 0.55, br * 0.5, br * 0.7, 1)
             love.graphics.line(col, y1, col, y2)
         else
@@ -100,7 +111,15 @@ function Raycaster:draw(map, px, py, angle, opts)
             local tz = inv_det * (-plane_y * dx + plane_x * dy)
 
             if tz > 0.05 then
-                local fog = math.max(0.0, 1.0 - tz / fog_range)
+                local sp_brightness = 0
+                for _, light in ipairs(lights) do
+                    local dx = sp.x - light.x
+                    local dy = sp.y - light.y
+                    local dist = math.sqrt(dx*dx + dy*dy)
+                    sp_brightness = sp_brightness + math.max(0, 1 - dist / light.radius) * light.intensity
+                end
+                sp_brightness = math.min(sp_brightness, 1)
+                local fog = sp_brightness
                 if fog > 0.01 then
                     local size   = sp.size or 1.0
                     local h_half = math.floor(SH / tz * size / 2)
