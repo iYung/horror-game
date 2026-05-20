@@ -112,6 +112,13 @@ describe("Map torches — forest", function()
         end
     end)
 
+    it("no torch is on a doorway cell", function()
+        for i, t in ipairs(map.torches) do
+            assert.is_false(map:is_doorway(t.col, t.row),
+                "torch " .. i .. " at col=" .. t.col .. " row=" .. t.row .. " is on a doorway")
+        end
+    end)
+
 end)
 
 -- ──────────────────────────────────────────────────────────
@@ -155,6 +162,13 @@ describe("Map torches — hospital", function()
             assert.is_nil(seen[key],
                 "duplicate torch " .. i .. " at col=" .. t.col .. " row=" .. t.row)
             seen[key] = true
+        end
+    end)
+
+    it("no torch is on a doorway cell", function()
+        for i, t in ipairs(map.torches) do
+            assert.is_false(map:is_doorway(t.col, t.row),
+                "torch " .. i .. " at col=" .. t.col .. " row=" .. t.row .. " is on a doorway")
         end
     end)
 

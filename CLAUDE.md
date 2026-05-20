@@ -215,7 +215,11 @@ Items only spawn if their `value ≤ budget`. Flare gun (`value=0`) always spawn
 Both maps are 40×30 cells, cell size 32 px (1280×960 world px). Grid values: `1` = floor, `2` = wall.
 
 `map:is_wall(col, row)` returns true for walls and out-of-bounds.
+`map:is_hallway(col, row)` returns true if the floor cell is exactly 1 cell wide in one axis (a corridor cell).
+`map:is_doorway(col, row)` returns true if the floor cell is at or adjacent to a hallway cell (a room entrance/exit).
 `map:world_to_cell(wx, wy)` and `map:cell_to_world(col, row)` convert between coordinate spaces.
+
+Wall torches listed in a map file are filtered at construction time: any torch whose `{col, row}` is a doorway cell is silently dropped. Place torches away from the hallway-column entrance cell — one column offset from the hallway is enough.
 
 Both maps use a grid of rooms connected by 1-cell-wide hallways. Room sizes and hallway lengths are deliberately varied (S/M/L) so different parts of the map have different sightline lengths and encounter distances.
 
@@ -327,6 +331,6 @@ Every change gets two things: **run the full suite** (`--headless`) to catch reg
 
 **New trait**: add to `traits.lua` with a cost and an `apply(monster)` stub. Implement the behaviour in `monster.lua`'s update loop checking `self.has_<traitname>`. Add a test in `test/run_test.lua` — see existing trait tests as a template.
 
-**New map**: create `game/world/map_<name>.lua` following the `fill_rect` pattern. Add it to the map picker in `planning_scene.lua` and the loader in `run_scene.lua`. Also add it to `Simulation`'s `load_map` in `game/simulation.lua` so it can be tested headlessly.
+**New map**: create `game/world/map_<name>.lua` following the `fill_rect` pattern. Add it to the map picker in `planning_scene.lua` and the loader in `run_scene.lua`. Also add it to `Simulation`'s `load_map` in `game/simulation.lua` so it can be tested headlessly. When placing wall torches, keep them off the hallway-entrance cell — shift one column away from the vertical-hallway column for top-row positions (doorways are automatically filtered but the room will lose its torch if the only position given is a doorway).
 
 **New scene**: subclass `Scene` (or just follow the same metatable pattern). Register it in `main.lua` or transition to it via `scene_ref.manager:switch(...)`.

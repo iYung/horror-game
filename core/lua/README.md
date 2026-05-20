@@ -225,9 +225,11 @@ DDA-based first-person column renderer with z-buffered billboard sprites and dis
 | Field | Default | Meaning |
 |-------|---------|---------|
 | `fov` | `π/3` | Horizontal FOV in radians |
-| `fog_range` | `14` | Cells until walls/sprites fade to black |
+| `lights` | `{}` | List of point lights — walls and sprites outside all light radii render black |
 | `sprites` | `{}` | List of billboard sprites (see below) |
 
-Each sprite: `{ x, y, size=1, color={r,g,b,a} }` where `x`/`y` are grid units and `size` scales height relative to wall height at the same distance.
+Each light: `{ x, y, radius, intensity }` where `x`/`y` are 1-indexed grid units, `radius` is in cells, and `intensity` (0–1) scales brightness. Multiple lights accumulate and clamp to 1. With no lights the scene is pitch black.
+
+Each sprite: `{ x, y, size=1, color={r,g,b,a} }` where `x`/`y` are grid units and `size` scales height relative to wall height at the same distance. Sprites are lit by the same point-light list and invisible outside all light radii.
 
 Internally builds a per-column z-buffer during the wall pass; sprites are drawn back-to-front and clipped against it. Resets `love.graphics` colour to white after drawing.

@@ -90,21 +90,21 @@ local spawn      = { x = 5  * Map.CELL, y = 4  * Map.CELL }
 local extraction = { x = 35 * Map.CELL, y = 25 * Map.CELL, radius = 64 }
 
 local torches = {
-    -- Row 1 rooms (top row = row 2)
+    -- Row 1 rooms (top row = row 2, no hallway from north)
     {col=5,  row=2},   -- A1
     {col=13, row=2},   -- B1
     {col=24, row=2},   -- C1
     {col=35, row=2},   -- D1
-    -- Row 2 rooms (top row = row 12)
-    {col=5,  row=12},  -- A2
-    {col=13, row=12},  -- B2
-    {col=24, row=12},  -- C2
-    {col=35, row=12},  -- D2
-    -- Row 3 rooms (top row = row 22)
-    {col=5,  row=22},  -- A3
-    {col=13, row=22},  -- B3
-    {col=24, row=22},  -- C3
-    {col=35, row=22},  -- D3
+    -- Row 2 rooms (top row = row 12, shifted off the vertical-hallway column)
+    {col=3,  row=12},  -- A2  (hallway enters at col 5)
+    {col=14, row=12},  -- B2  (hallway enters at col 13)
+    {col=23, row=12},  -- C2  (hallway enters at col 24)
+    {col=34, row=12},  -- D2  (hallway enters at col 35)
+    -- Row 3 rooms (top row = row 22, shifted off the vertical-hallway column)
+    {col=3,  row=22},  -- A3  (hallway enters at col 5)
+    {col=14, row=22},  -- B3  (hallway enters at col 13)
+    {col=23, row=22},  -- C3  (hallway enters at col 24)
+    {col=34, row=22},  -- D3  (hallway enters at col 35)
 }
 
 return Map.new(grid, spawn, extraction, torches)

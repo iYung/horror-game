@@ -121,30 +121,30 @@ local spawn      = { x = 2  * Map.CELL, y = 2  * Map.CELL }
 local extraction = { x = 37 * Map.CELL, y = 26 * Map.CELL, radius = 64 }
 
 local torches = {
-    -- Row 1 rooms (top row = row 2)
+    -- Row 1 rooms (top row = row 2, no hallway from north)
     {col=3,  row=2},   -- A1
     {col=10, row=2},   -- B1
     {col=20, row=2},   -- C1
     {col=29, row=2},   -- D1
     {col=37, row=2},   -- E1
-    -- Row 2 rooms (top row = row 8)
-    {col=3,  row=8},   -- A2
-    {col=10, row=8},   -- B2
-    {col=20, row=8},   -- C2
-    {col=29, row=8},   -- D2
-    {col=37, row=8},   -- E2
-    -- Row 3 rooms (top row = row 16)
-    {col=3,  row=16},  -- A3
-    {col=10, row=16},  -- B3
-    {col=20, row=16},  -- C3
-    {col=29, row=16},  -- D3
-    {col=37, row=16},  -- E3
-    -- Row 4 rooms (top row = row 24)
-    {col=3,  row=24},  -- A4
-    {col=10, row=24},  -- B4
-    {col=20, row=24},  -- C4
-    {col=29, row=24},  -- D4
-    {col=37, row=24},  -- E4
+    -- Row 2 rooms (top row = row 8, shifted off the vertical-hallway column)
+    {col=4,  row=8},   -- A2  (hallway enters at col 3)
+    {col=11, row=8},   -- B2  (hallway enters at col 10)
+    {col=21, row=8},   -- C2  (hallway enters at col 20)
+    {col=28, row=8},   -- D2  (hallway enters at col 29)
+    {col=36, row=8},   -- E2  (hallway enters at col 37)
+    -- Row 3 rooms (top row = row 16, shifted off the vertical-hallway column)
+    {col=4,  row=16},  -- A3  (hallway enters at col 3)
+    {col=11, row=16},  -- B3  (hallway enters at col 10)
+    {col=21, row=16},  -- C3  (hallway enters at col 20)
+    {col=28, row=16},  -- D3  (hallway enters at col 29)
+    {col=36, row=16},  -- E3  (hallway enters at col 37)
+    -- Row 4 rooms (top row = row 24, shifted off the vertical-hallway column)
+    {col=4,  row=24},  -- A4  (hallway enters at col 3)
+    {col=11, row=24},  -- B4  (hallway enters at col 10)
+    {col=21, row=24},  -- C4  (hallway enters at col 20)
+    {col=28, row=24},  -- D4  (hallway enters at col 29)
+    {col=36, row=24},  -- E4  (hallway enters at col 37)
 }
 
 return Map.new(grid, spawn, extraction, torches)

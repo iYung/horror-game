@@ -25,8 +25,32 @@ function Map.new(grid, spawn, extraction, torches)
     self.grid       = grid
     self.spawn      = spawn
     self.extraction = extraction
-    self.torches    = torches or {}
+    self.torches    = {}
+    for _, t in ipairs(torches or {}) do
+        if not self:is_doorway(t.col, t.row) then
+            table.insert(self.torches, t)
+        end
+    end
     return self
+end
+
+-- A floor cell is a hallway cell if it is exactly 1 wide in one axis
+-- (walls on both sides north/south OR both sides east/west).
+function Map:is_hallway(col, row)
+    if self:is_wall(col, row) then return false end
+    local wall_ns = self:is_wall(col, row - 1) and self:is_wall(col, row + 1)
+    local wall_ew = self:is_wall(col - 1, row) and self:is_wall(col + 1, row)
+    return wall_ns or wall_ew
+end
+
+-- A floor cell is a doorway if it or any orthogonal neighbour is a hallway cell.
+function Map:is_doorway(col, row)
+    if self:is_wall(col, row) then return false end
+    return self:is_hallway(col, row)
+        or self:is_hallway(col - 1, row)
+        or self:is_hallway(col + 1, row)
+        or self:is_hallway(col, row - 1)
+        or self:is_hallway(col, row + 1)
 end
 
 function Map:is_wall(col, row)
