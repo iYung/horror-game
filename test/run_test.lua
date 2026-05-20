@@ -3,6 +3,7 @@
 -- Run via the Love2D headless runner which injects busted globals.
 
 local Simulation = require("game/simulation")
+local Items      = require("game/data/items")
 
 local function make_config(overrides)
     local cfg = {
@@ -87,6 +88,26 @@ describe("Simulation", function()
         sim.monster.y = 160
 
         local state = sim:step(1 / 60)
+
+        assert.are.equal("chase", state.monster.state)
+    end)
+
+    it("sight trait chases player via flashlight glow without LOS", function()
+        -- Player starts at spawn (forest map top-left) with a flashlight.
+        -- Monster starts at extraction (bottom-right) — far away with walls between,
+        -- so no direct LOS. Turning the flashlight on should trigger the glow branch
+        -- and immediately set monster state to chase.
+        local sim = Simulation.new(make_config({
+            monster_traits = { "sight" },
+            loadout_item   = Items.new("flashlight"),
+        }))
+
+        -- Confirm no LOS by default: monster should be in wander after one still frame
+        local pre = sim:step(1 / 60)
+        assert.are.equal("wander", pre.monster.state)
+
+        -- Now toggle the flashlight on with a single use press
+        local state = sim:step(1 / 60, { use = true })
 
         assert.are.equal("chase", state.monster.state)
     end)

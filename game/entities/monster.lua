@@ -10,7 +10,7 @@
 --   search  — paces near last_known_pos for 4 s, then back to wander
 --
 -- Traits (applied from traits_list passed to new()):
---   sight   — LOS raycast 12 cells; instant chase; also triggers on active torch glow
+--   sight   — LOS raycast 12 cells; instant chase; also triggers on active flashlight glow
 --   speed   — adds SPEED_BOOST to all movement speeds
 --   smell   — every 2.5 s unconditionally updates last_known_pos (global, no range)
 --   hearing — triggers alerted when player moves within 8 cells
@@ -178,8 +178,8 @@ function Monster:update(dt, player)
     end
 
     if self.has_sight then
-        local active_item = player:active_item()
-        local torch_glow  = active_item and active_item.id == "torch" and active_item.active == true
+        local active_item    = player:active_item()
+        local flashlight_glow = active_item and active_item.id == "flashlight" and active_item.active and active_item.on
 
         if self.state == "chase" then
             if los_clear(self.map, mx, my, px, py) then
@@ -195,7 +195,7 @@ function Monster:update(dt, player)
             end
         else
             local sight_range = 12 * CELL
-            if (d_px <= sight_range and los_clear(self.map, mx, my, px, py)) or torch_glow then
+            if (d_px <= sight_range and los_clear(self.map, mx, my, px, py)) or flashlight_glow then
                 self.last_known_pos   = { x = px, y = py }
                 self.sight_lost_timer = 0
                 transition(self, "chase")

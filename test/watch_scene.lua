@@ -11,7 +11,6 @@ local function fog_range(player)
     local item = player:active_item()
     if item then
         if item.id == "flashlight" and item.active and item.on then return 14 end
-        if item.id == "torch"      and item.active              then return 11 end
     end
     return 8
 end

@@ -2,7 +2,7 @@
 -- Places items on random walkable floor cells at the start of each run.
 -- Items are budget-gated: item.value must be <= the run budget to be eligible.
 -- Flare gun (value=0) always spawns exactly once, guaranteed > 10 cells from spawn.
--- Torches and flashlights each spawn 3–5 copies when budget >= 1.
+-- Flashlights spawn 3–5 copies when budget >= 1.
 --
 -- Returns a list of ground items: { { x, y, item }, … }
 -- Positions are cell centres in world space.
@@ -58,14 +58,6 @@ function ItemSpawner.spawn(map, budget)
     reserved[ec * 1000 + er] = true
 
     if budget >= 1 then
-        local torch_count = math.random(3, 5)
-        local cells = pick_random(walkable, torch_count, reserved)
-        for _, cell in ipairs(cells) do
-            local wx, wy = cell_centre(cell.col, cell.row)
-            table.insert(ground, { x = wx, y = wy, item = Items.new("torch") })
-            reserved[cell.col * 1000 + cell.row] = true
-        end
-
         local fl_count = math.random(3, 5)
         cells = pick_random(walkable, fl_count, reserved)
         for _, cell in ipairs(cells) do

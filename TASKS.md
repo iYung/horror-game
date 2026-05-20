@@ -8,7 +8,7 @@ Roughly in implementation order. Complete each before moving to the next.
 
 - [ ] Rename window title to "NIGHTFALL" in `main.lua`
 - [ ] Create folder structure: `game/entities/`, `game/systems/`, `game/world/`, `game/ui/`, `game/data/`
-- [ ] Create `game/data/items.lua` — item definitions (torch, flashlight, flare gun)
+- [ ] Create `game/data/items.lua` — item definitions (flashlight, flare gun)
 - [ ] Create `game/data/traits.lua` — trait definitions and point costs
 
 ---
@@ -55,8 +55,7 @@ Roughly in implementation order. Complete each before moving to the next.
 ## 5. Items
 
 - [ ] Create `game/world/item_spawner.lua` — place items randomly on floor tiles, budget-gated, flare gun min distance from spawn
-- [ ] Implement **Torch** — omnidirectional light radius (~3 cells), consumable duration, visible to sighted monster through walls
-- [ ] Implement **Flashlight** — widens FOV cone to ~120°, extended range, consumable battery, toggle on/off
+- [ ] Implement **Flashlight** — widens FOV cone to ~120°, extended range, consumable battery, toggle on/off; triggers Sight detection while on
 - [ ] Implement **Flare Gun** — single use, triggers extraction countdown when used at extraction zone
 
 ---
@@ -93,7 +92,7 @@ Roughly in implementation order. Complete each before moving to the next.
 - [ ] Render explored-but-not-visible cells at ~40% brightness
 - [ ] Render currently-visible cells at full brightness
 - [ ] Only draw monster sprite when inside a currently-visible cell
-- [ ] Torch glow visible to sighted monster even outside player's FOV cone
+- [ ] Flashlight glow visible to sighted monster even through walls (no LOS required)
 
 ---
 
