@@ -29,16 +29,6 @@ function Raycaster:draw(map, px, py, angle, opts)
     local lights  = opts.lights or {}
     local sprites = opts.sprites or {}
 
-    -- Compute player brightness from point lights
-    local player_brightness = 0
-    for _, light in ipairs(lights) do
-        local dx = px - light.x
-        local dy = py - light.y
-        local dist = math.sqrt(dx*dx + dy*dy)
-        player_brightness = player_brightness + math.max(0, 1 - dist / light.radius) * light.intensity
-    end
-    player_brightness = math.min(player_brightness, 1)
-
     local dir_x    = math.cos(angle)
     local dir_y    = math.sin(angle)
     -- Camera plane perpendicular to direction, half-width = tan(fov/2)
@@ -46,9 +36,13 @@ function Raycaster:draw(map, px, py, angle, opts)
     local plane_x  = -dir_y * half_tan
     local plane_y  =  dir_x * half_tan
 
-    -- Walls, ceiling, and floor — DDA per column, build z-buffer
-    -- Ceiling/floor strips are drawn per-column using the same brightness as the wall
-    -- in that column so they respond to the same torch positions.
+    -- Ceiling and floor — flat colour, drawn once before the wall pass
+    love.graphics.setColor(0.06, 0.04, 0.06, 1)
+    love.graphics.rectangle("fill", 0, 0, SW, SH / 2)
+    love.graphics.setColor(0.10, 0.08, 0.08, 1)
+    love.graphics.rectangle("fill", 0, SH / 2, SW, SH / 2)
+
+    -- Walls — DDA per column, build z-buffer
     for col = 0, SW - 1 do
         local cam_x = 2 * col / SW - 1   -- -1 (left edge) to +1 (right edge)
         local rdx   = dir_x + plane_x * cam_x
@@ -94,24 +88,8 @@ function Raycaster:draw(map, px, py, angle, opts)
             local y2 = math.floor(SH / 2 + h / 2)
             love.graphics.setColor(br * 0.55, br * 0.5, br * 0.7, 1)
             love.graphics.line(col, y1, col, y2)
-
-            local cs = brightness * 0.45
-            love.graphics.setColor(0.55 * cs, 0.50 * cs, 0.45 * cs, 1)
-            love.graphics.line(col, 0, col, y1)
-
-            local fs = brightness * 0.55
-            love.graphics.setColor(0.35 * fs, 0.28 * fs, 0.22 * fs, 1)
-            love.graphics.line(col, y2, col, SH)
         else
             self._zbuf[col] = math.huge
-
-            local cs = player_brightness * 0.45
-            love.graphics.setColor(0.55 * cs, 0.50 * cs, 0.45 * cs, 1)
-            love.graphics.line(col, 0, col, SH / 2)
-
-            local fs = player_brightness * 0.55
-            love.graphics.setColor(0.35 * fs, 0.28 * fs, 0.22 * fs, 1)
-            love.graphics.line(col, SH / 2, col, SH)
         end
     end
 
