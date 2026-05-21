@@ -184,12 +184,15 @@ local function build_sprites(self)
 
     -- Ground items
     for _, entry in ipairs(self.ground_items) do
-        local is_flare = entry.item and entry.item.id == "flare_gun"
+        local id = entry.item and entry.item.id
+        local color = id == "flare_gun" and {1, 0.2, 0.8, 1}
+                   or id == "compass"   and {0.3, 0.8, 1.0, 1}
+                   or                      {1, 0.9, 0.3, 1}
         table.insert(sprites, {
             x     = entry.x / CELL + 1,
             y     = entry.y / CELL + 1,
             size  = 0.4,
-            color = is_flare and {1, 0.2, 0.8, 1} or {1, 0.9, 0.3, 1},
+            color = color,
         })
     end
 
