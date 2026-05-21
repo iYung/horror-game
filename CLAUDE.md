@@ -290,7 +290,9 @@ In `--watch` mode each test coroutine drives the simulation frame-by-frame and t
 ```
 test/
   runner.lua       Minimal busted-compatible framework — describe / it / assert.*
-  run_test.lua     All game scenarios; one it() per scenario
+  run_test.lua     Core game scenarios; one it() per scenario
+  *_test.lua       Any file ending in _test.lua is auto-discovered and run by both
+                   --headless and --watch. No changes to main.lua needed.
   watch_scene.lua  Scene3D subclass that renders Simulation._current each frame
 ```
 

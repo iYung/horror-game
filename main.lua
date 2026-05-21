@@ -5,9 +5,22 @@ for _, v in ipairs(arg or {}) do
     if v == "--watch"    then watch    = true end
 end
 
+-- Collect every *_test.lua in test/ so both headless and watch always run the
+-- same suite. Adding a new test file requires no changes here.
+local function find_tests()
+    local files = {}
+    for _, name in ipairs(love.filesystem.getDirectoryItems("test")) do
+        if name:match("_test%.lua$") then
+            table.insert(files, "test/" .. name:gsub("%.lua$", ""))
+        end
+    end
+    table.sort(files)
+    return files
+end
+
 if headless then
     function love.load()
-        require("test/runner").run({ "test/run_test", "test/torches_test" })
+        require("test/runner").run(find_tests())
     end
 elseif watch then
     local SceneManager = require("core/lua/scene_manager")
@@ -23,7 +36,7 @@ elseif watch then
         Simulation._watching = true
         local runner     = require("test/runner")
         local WatchScene = require("test/watch_scene")
-        manager:switch(WatchScene.new(runner.collect({ "test/run_test" })))
+        manager:switch(WatchScene.new(runner.collect(find_tests())))
     end
 
     function love.update(dt) manager:update(dt) end
