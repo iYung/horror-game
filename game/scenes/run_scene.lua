@@ -69,7 +69,7 @@ function RunScene:on_enter()
 
     self.ground_items = ItemSpawner.spawn(map, self.run_config.budget)
     self.extraction   = Extraction.new(map)
-    self.hud          = HUD.new(self.player.inventory, self.extraction)
+    self.hud          = HUD.new(self.player.inventory, self.extraction, self.player)
 
     -- Drawer holds 2D HUD overlay only; 3D world is rendered via self.raycaster
     self.drawer = Drawer.new()
