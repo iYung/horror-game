@@ -124,4 +124,21 @@ describe("Simulation", function()
         assert.are.equal("alerted", state.monster.state)
     end)
 
+    it("compass item can be held without errors", function()
+        local run_config = make_config({
+            budget         = 3,
+            map_id         = "forest",
+            monster_traits = {},
+            loadout_item   = Items.new("compass"),
+        })
+        local sim = Simulation.new(run_config)
+
+        local state
+        for _ = 1, 10 do
+            state = sim:step(1 / 60)
+        end
+
+        assert.is_not_nil(state)
+    end)
+
 end)

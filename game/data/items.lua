@@ -13,6 +13,8 @@
 --             Extends fog range to 14 cells while on.
 -- Flare gun:  value=0 (always spawns). use_fn returns "extract". RunScene intercepts
 --             this string and calls extraction:try_start only if player is in zone.
+-- Compass:    value=3. Passive item — no use_fn. While held as the active item,
+--             the HUD draws a directional arrow pointing toward the extraction zone.
 
 local Timer = require("core/lua/timer")
 
@@ -30,6 +32,7 @@ local definitions = {
         name  = "Flare Gun",
         value = 0,
     },
+    compass = { id = "compass", name = "Compass", value = 3 },
 }
 
 local function make_flashlight()
@@ -75,9 +78,16 @@ local function make_flare_gun()
     return self
 end
 
+local function make_compass()
+    local self = {}
+    for k, v in pairs(definitions.compass) do self[k] = v end
+    return self
+end
+
 local factories = {
     flashlight = make_flashlight,
     flare_gun  = make_flare_gun,
+    compass    = make_compass,
 }
 
 function items.new(id)

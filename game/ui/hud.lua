@@ -38,10 +38,11 @@ local function truncate_to_fit(text, font, max_w)
     return truncated .. ".."
 end
 
-function HUD.new(inventory, extraction)
+function HUD.new(inventory, extraction, player)
     local self = setmetatable({}, HUD)
     self.inventory  = inventory
     self.extraction = extraction
+    self.player     = player
     return self
 end
 
@@ -101,6 +102,25 @@ function HUD:draw()
         local ey = 720 - EXTRACT_BOTTOM - th
         love.graphics.setColor(1, 1, 1, alpha)
         love.graphics.print(label, ex, ey)
+    end
+
+    -- Compass arrow: shown when player holds the compass
+    if self.player then
+        local item = self.player.inventory:active()
+        if item and item.id == "compass" then
+            local pc  = self.player:centre()
+            local ez  = self.extraction._zone
+            local dx  = ez.x - pc.x
+            local dy  = ez.y - pc.y
+            local world_angle    = math.atan2(dy, dx)
+            local relative_angle = world_angle - self.player.angle
+            love.graphics.push()
+            love.graphics.translate(640, 680)
+            love.graphics.rotate(relative_angle)
+            love.graphics.setColor(1, 1, 1, 0.85)
+            love.graphics.polygon("fill", 0, -18, -10, 10, 10, 10)
+            love.graphics.pop()
+        end
     end
 
     love.graphics.setFont(prev_font)

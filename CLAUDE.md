@@ -203,6 +203,7 @@ Always instantiate with `items.new(id)` — returns a fresh table. Never share i
 |------|-------|---------------|
 | Flashlight | 1 | Toggle on/off with `F`. Burns 120 s total (regardless of on/off). While on, extends fog range to 14 cells and triggers monster Sight glow detection. |
 | Flare Gun | 0 | `use_fn` returns `"extract"`. RunScene intercepts this and calls `extraction:try_start` only if player is in zone. Renders as a pink billboard. |
+| Compass | 3 | Passive. While held as the active item, the HUD draws a directional arrow pointing toward the extraction zone. No use_fn. |
 
 Items only spawn if their `value ≤ budget`. Flare gun (`value=0`) always spawns.
 
@@ -317,7 +318,7 @@ Every change gets two things: **run the full suite** (`--headless`) to catch reg
 | Change | Run to catch regressions | New test to add |
 |--------|--------------------------|-----------------|
 | New trait | All existing trait tests | Positive case (stimulus → correct state within known time). If trigger is conditional (like hearing needing movement), add a negative case too. Mirror smell/hearing/sight tests. |
-| New item | Kill + extraction tests | `use_fn` returns the right signal; interaction with extraction or inventory works. |
+| New item | Kill + extraction tests | `use_fn` returns the right signal; interaction with extraction or inventory works. For passive items (no `use_fn`), a smoke test confirming no errors over several frames is sufficient. |
 | Monster update order | Kill test (ordering is load-bearing) | None required if existing kill test still passes. |
 | Extraction logic | Both extraction tests (success + failed) | None required if both still pass. |
 | New map | Smoke-run: `Simulation.new({ map_id = "yourmap", ... }):step(1/60)` | At minimum, that smoke step should not error. Add spawn/extraction coord checks if coords were non-obvious. |
