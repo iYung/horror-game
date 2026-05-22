@@ -88,10 +88,12 @@ Each item has a **point value** — it can only spawn on a run if its value ≤ 
 
 | Item | Value | Effect |
 |------|-------|--------|
-| Flashlight | 1 pt | Widens LOS cone to ~120°, extended range. Consumable — battery runs out after a fixed duration. Toggle on/off. While on, triggers Sight detection through walls. |
-| Flare Gun | — | Always spawns. Single-use. Required to trigger extraction. Spawns randomly each run, guaranteed not near the player spawn. |
+| Flashlight | 1 pt | Extends fog range while on. Consumable — 120 s battery. Toggle on/off. While on, triggers Sight detection. |
+| Flare Gun | 0 | Always spawns. Single-use. Required to trigger extraction — must be used while standing in the extraction zone. |
+| Compass | 3 pt | Passive. While held, HUD shows a white arrow pointing toward the extraction zone. |
+| Tracker | 1 pt | Passive. While held, HUD shows a red arrow pointing toward the monster. |
 
-Flashlights spawn randomly on the ground (3–5 copies, budget-gated). Flare Gun has one spawn per run.
+Flare Gun always spawns (value 0). All other items spawn randomly on the ground, budget-gated by their point value.
 
 ### Extraction
 

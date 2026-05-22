@@ -141,4 +141,21 @@ describe("Simulation", function()
         assert.is_not_nil(state)
     end)
 
+    it("tracker item can be held without errors", function()
+        local run_config = make_config({
+            budget         = 1,
+            map_id         = "forest",
+            monster_traits = {},
+            loadout_item   = Items.new("tracker"),
+        })
+        local sim = Simulation.new(run_config)
+
+        local state
+        for _ = 1, 10 do
+            state = sim:step(1 / 60)
+        end
+
+        assert.is_not_nil(state)
+    end)
+
 end)

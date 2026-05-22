@@ -69,7 +69,7 @@ function RunScene:on_enter()
 
     self.ground_items = ItemSpawner.spawn(map, self.run_config.budget)
     self.extraction   = Extraction.new(map)
-    self.hud          = HUD.new(self.player.inventory, self.extraction, self.player)
+    self.hud          = HUD.new(self.player.inventory, self.extraction, self.player, self.monster)
 
     -- Drawer holds 2D HUD overlay only; 3D world is rendered via self.raycaster
     self.drawer = Drawer.new()
@@ -187,6 +187,7 @@ local function build_sprites(self)
         local id = entry.item and entry.item.id
         local color = id == "flare_gun" and {1, 0.2, 0.8, 1}
                    or id == "compass"   and {0.3, 0.8, 1.0, 1}
+                   or id == "tracker"   and {1, 0.4, 0.1, 1}
                    or                      {1, 0.9, 0.3, 1}
         table.insert(sprites, {
             x     = entry.x / CELL + 1,
