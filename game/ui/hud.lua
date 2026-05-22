@@ -38,11 +38,12 @@ local function truncate_to_fit(text, font, max_w)
     return truncated .. ".."
 end
 
-function HUD.new(inventory, extraction, player)
+function HUD.new(inventory, extraction, player, monster)
     local self = setmetatable({}, HUD)
     self.inventory  = inventory
     self.extraction = extraction
     self.player     = player
+    self.monster    = monster
     return self
 end
 
@@ -118,6 +119,24 @@ function HUD:draw()
             love.graphics.translate(640, 680)
             love.graphics.rotate(relative_angle)
             love.graphics.setColor(1, 1, 1, 0.85)
+            love.graphics.polygon("fill", 0, -18, -10, 10, 10, 10)
+            love.graphics.pop()
+        end
+    end
+
+    -- tracker arrow: shown when player holds tracker
+    if self.player and self.monster then
+        local item = self.player.inventory:active()
+        if item and item.id == "tracker" then
+            local pc  = self.player:centre()
+            local dx  = self.monster.x - pc.x
+            local dy  = self.monster.y - pc.y
+            local world_angle    = math.atan2(dy, dx)
+            local relative_angle = world_angle - self.player.angle
+            love.graphics.push()
+            love.graphics.translate(640, 680)
+            love.graphics.rotate(relative_angle)
+            love.graphics.setColor(1, 0.15, 0.15, 0.85)
             love.graphics.polygon("fill", 0, -18, -10, 10, 10, 10)
             love.graphics.pop()
         end

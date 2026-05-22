@@ -204,6 +204,7 @@ Always instantiate with `items.new(id)` — returns a fresh table. Never share i
 | Flashlight | 1 | Toggle on/off with `F`. Burns 120 s total (regardless of on/off). While on, extends fog range to 14 cells and triggers monster Sight glow detection. |
 | Flare Gun | 0 | `use_fn` returns `"extract"`. RunScene intercepts this and calls `extraction:try_start` only if player is in zone. Renders as a pink billboard. |
 | Compass | 3 | Passive. While held as the active item, the HUD draws a directional arrow pointing toward the extraction zone. No use_fn. |
+| Tracker | 1 | Passive. While held as the active item, the HUD draws a red directional arrow pointing toward the monster. No use_fn. |
 
 Items only spawn if their `value ≤ budget`. Flare gun (`value=0`) always spawns.
 

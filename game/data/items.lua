@@ -15,6 +15,8 @@
 --             this string and calls extraction:try_start only if player is in zone.
 -- Compass:    value=3. Passive item — no use_fn. While held as the active item,
 --             the HUD draws a directional arrow pointing toward the extraction zone.
+-- Tracker:    value=1. Passive item — no use_fn. While held as the active item,
+--             the HUD draws a directional arrow pointing toward the monster.
 
 local Timer = require("core/lua/timer")
 
@@ -32,7 +34,8 @@ local definitions = {
         name  = "Flare Gun",
         value = 0,
     },
-    compass = { id = "compass", name = "Compass", value = 3 },
+    compass  = { id = "compass",  name = "Compass",  value = 3 },
+    tracker  = { id = "tracker",  name = "Tracker",  value = 1 },
 }
 
 local function make_flashlight()
@@ -84,10 +87,17 @@ local function make_compass()
     return self
 end
 
+local function make_tracker()
+    local self = {}
+    for k, v in pairs(definitions.tracker) do self[k] = v end
+    return self
+end
+
 local factories = {
     flashlight = make_flashlight,
     flare_gun  = make_flare_gun,
     compass    = make_compass,
+    tracker    = make_tracker,
 }
 
 function items.new(id)

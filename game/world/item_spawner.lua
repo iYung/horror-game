@@ -3,6 +3,7 @@
 -- Items are budget-gated: item.value must be <= the run budget to be eligible.
 -- Flare gun (value=0) always spawns exactly once, guaranteed > 10 cells from spawn.
 -- Flashlights spawn 3–5 copies when budget >= 1.
+-- Trackers spawn 1–2 copies when budget >= 1.
 -- Compasses spawn 1–2 copies when budget >= 3.
 --
 -- Returns a list of ground items: { { x, y, item }, … }
@@ -64,6 +65,16 @@ function ItemSpawner.spawn(map, budget)
         for _, cell in ipairs(cells) do
             local wx, wy = cell_centre(cell.col, cell.row)
             table.insert(ground, { x = wx, y = wy, item = Items.new("flashlight") })
+            reserved[cell.col * 1000 + cell.row] = true
+        end
+    end
+
+    if budget >= 1 then
+        local tr_count = math.random(1, 2)
+        local tr_cells = pick_random(walkable, tr_count, reserved)
+        for _, cell in ipairs(tr_cells) do
+            local wx, wy = cell_centre(cell.col, cell.row)
+            table.insert(ground, { x = wx, y = wy, item = Items.new("tracker") })
             reserved[cell.col * 1000 + cell.row] = true
         end
     end
