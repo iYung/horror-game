@@ -97,8 +97,10 @@ function Player:update(dt, ground_items)
     end
 
     if move ~= 0 then
-        local dx = math.cos(self.angle) * move * SPEED_GU * dt
-        local dy = math.sin(self.angle) * move * SPEED_GU * dt
+        local active_item = self.inventory:active()
+        local speed_scale = (active_item and active_item.speed_mult) or 1.0
+        local dx = math.cos(self.angle) * move * SPEED_GU * dt * speed_scale
+        local dy = math.sin(self.angle) * move * SPEED_GU * dt * speed_scale
         if can_move(self.map, self.x + dx, self.y)  then self.x = self.x + dx end
         if can_move(self.map, self.x,      self.y + dy) then self.y = self.y + dy end
     end

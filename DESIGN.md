@@ -92,6 +92,7 @@ Each item has a **point value** — it can only spawn on a run if its value ≤ 
 | Flare Gun | 0 | Always spawns. Single-use. Required to trigger extraction — must be used while standing in the extraction zone. |
 | Compass | 3 pt | Passive. While held, HUD shows a white arrow pointing toward the extraction zone. |
 | Tracker | 1 pt | Passive. While held, HUD shows a red arrow pointing toward the monster. |
+| Adrenaline Shot | 2 pt | Active. Press `F` to trigger a 5-second speed boost (1.75× movement speed). After the boost expires, a 20-second cooldown prevents reuse. Never consumed — stays in inventory for the whole run. HUD shows BOOST or remaining cooldown seconds in the active slot. |
 
 Flare Gun always spawns (value 0). All other items spawn randomly on the ground, budget-gated by their point value.
 

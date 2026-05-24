@@ -158,4 +158,33 @@ describe("Simulation", function()
         assert.is_not_nil(state)
     end)
 
+    it("adrenaline item can be held without errors", function()
+        local run_config = make_config({
+            budget         = 2,
+            map_id         = "forest",
+            monster_traits = {},
+            loadout_item   = Items.new("adrenaline"),
+        })
+        local sim = Simulation.new(run_config)
+
+        local state
+        for _ = 1, 10 do
+            state = sim:step(1 / 60)
+        end
+
+        assert.is_not_nil(state)
+    end)
+
+    it("adrenaline use_fn applies speed multiplier", function()
+        local item = Items.new("adrenaline")
+
+        assert.is_false(item.boosting)
+        assert.are.equal(1.0, item.speed_mult)
+
+        item.use_fn()
+
+        assert.is_true(item.boosting)
+        assert.is_true(item.speed_mult > 1.0)
+    end)
+
 end)

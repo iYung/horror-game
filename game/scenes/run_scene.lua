@@ -123,6 +123,13 @@ function RunScene:update(dt)
         end
     end
 
+    for i = 1, 5 do
+        local item = self.player.inventory.slots[i]
+        if item and item.update then
+            item.update(dt, self.player.inventory)
+        end
+    end
+
     self.monster:update(dt, self.player)
 
     local result = self.extraction:update(dt, self.player)
@@ -185,10 +192,11 @@ local function build_sprites(self)
     -- Ground items
     for _, entry in ipairs(self.ground_items) do
         local id = entry.item and entry.item.id
-        local color = id == "flare_gun" and {1, 0.2, 0.8, 1}
-                   or id == "compass"   and {0.3, 0.8, 1.0, 1}
+        local color = id == "flare_gun"   and {1, 0.2, 0.8, 1}
+                   or id == "compass"    and {0.3, 0.8, 1.0, 1}
                    or id == "tracker"   and {1, 0.4, 0.1, 1}
-                   or                      {1, 0.9, 0.3, 1}
+                   or id == "adrenaline" and {0.2, 1.0, 0.4, 1}
+                   or                       {1, 0.9, 0.3, 1}
         table.insert(sprites, {
             x     = entry.x / CELL + 1,
             y     = entry.y / CELL + 1,

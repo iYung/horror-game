@@ -34,8 +34,16 @@ local definitions = {
         name  = "Flare Gun",
         value = 0,
     },
-    compass  = { id = "compass",  name = "Compass",  value = 3 },
-    tracker  = { id = "tracker",  name = "Tracker",  value = 1 },
+    compass    = { id = "compass",  name = "Compass",  value = 3 },
+    tracker    = { id = "tracker",  name = "Tracker",  value = 1 },
+    adrenaline = {
+        id               = "adrenaline",
+        name             = "Adrenaline Shot",
+        value            = 2,
+        boost_duration   = 5,
+        boost_mult       = 1.75,
+        cooldown_duration = 20,
+    },
 }
 
 local function make_flashlight()
@@ -93,11 +101,49 @@ local function make_tracker()
     return self
 end
 
+local function make_adrenaline()
+    local self = {}
+    for k, v in pairs(definitions.adrenaline) do self[k] = v end
+    self.boosting       = false
+    self.on_cooldown    = false
+    self.boost_timer    = nil
+    self.cooldown_timer = nil
+    self.speed_mult     = 1.0
+
+    self.use_fn = function(player, world)
+        if self.boosting or self.on_cooldown then return end
+        self.boosting    = true
+        self.speed_mult  = self.boost_mult
+        self.boost_timer = Timer.new(self.boost_duration)
+    end
+
+    self.update = function(dt)
+        if self.boosting and self.boost_timer then
+            if self.boost_timer:update(dt) then
+                self.boosting       = false
+                self.speed_mult     = 1.0
+                self.boost_timer    = nil
+                self.on_cooldown    = true
+                self.cooldown_timer = Timer.new(self.cooldown_duration)
+            end
+        end
+        if self.on_cooldown and self.cooldown_timer then
+            if self.cooldown_timer:update(dt) then
+                self.on_cooldown    = false
+                self.cooldown_timer = nil
+            end
+        end
+    end
+
+    return self
+end
+
 local factories = {
     flashlight = make_flashlight,
     flare_gun  = make_flare_gun,
     compass    = make_compass,
     tracker    = make_tracker,
+    adrenaline = make_adrenaline,
 }
 
 function items.new(id)
