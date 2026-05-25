@@ -147,6 +147,7 @@ local function make_taser()
     self.use_fn = function(player, world)
         if self.used then return nil end
         self.used = true
+        player.inventory:remove_item_by_ref(self)
         return "stun"
     end
 
