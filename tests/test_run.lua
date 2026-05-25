@@ -200,6 +200,7 @@ describe("Simulation", function()
         sim:step(1 / 60, { use = true })
 
         assert.is_true(sim.monster.stunned)
+        assert.is_nil(sim.player.inventory:active())
     end)
 
     it("taser is consumed but does not stun when monster is out of range", function()
@@ -217,6 +218,7 @@ describe("Simulation", function()
 
         assert.is_false(sim.monster.stunned)
         assert.is_true(taser.used)
+        assert.is_nil(sim.player.inventory:active())
     end)
 
 end)
