@@ -100,6 +100,16 @@ function ItemSpawner.spawn(map, budget)
         end
     end
 
+    if budget >= 5 then
+        local ta_count = math.random(1, 2)
+        local ta_cells = pick_random(walkable, ta_count, reserved)
+        for _, cell in ipairs(ta_cells) do
+            local wx, wy = cell_centre(cell.col, cell.row)
+            table.insert(ground, { x = wx, y = wy, item = Items.new("taser") })
+            reserved[cell.col * 1000 + cell.row] = true
+        end
+    end
+
     local flare_pool = {}
     for _, cell in ipairs(walkable) do
         if manhattan(cell.col, cell.row, sc, sr) > 10 then

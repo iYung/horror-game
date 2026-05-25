@@ -44,6 +44,7 @@ local definitions = {
         boost_mult       = 1.75,
         cooldown_duration = 20,
     },
+    taser = { id = "taser", name = "Taser", value = 5 },
 }
 
 local function make_flashlight()
@@ -138,12 +139,28 @@ local function make_adrenaline()
     return self
 end
 
+local function make_taser()
+    local self = {}
+    for k, v in pairs(definitions.taser) do self[k] = v end
+    self.used = false
+
+    self.use_fn = function(player, world)
+        if self.used then return nil end
+        self.used = true
+        player.inventory:remove_item_by_ref(self)
+        return "stun"
+    end
+
+    return self
+end
+
 local factories = {
     flashlight = make_flashlight,
     flare_gun  = make_flare_gun,
     compass    = make_compass,
     tracker    = make_tracker,
     adrenaline = make_adrenaline,
+    taser      = make_taser,
 }
 
 function items.new(id)
