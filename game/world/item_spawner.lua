@@ -5,6 +5,7 @@
 -- Flashlights spawn 3–5 copies when budget >= 1.
 -- Trackers spawn 1–2 copies when budget >= 1.
 -- Compasses spawn 1–2 copies when budget >= 3.
+-- Adrenaline shots spawn 1–2 copies when budget >= 2.
 --
 -- Returns a list of ground items: { { x, y, item }, … }
 -- Positions are cell centres in world space.
@@ -85,6 +86,16 @@ function ItemSpawner.spawn(map, budget)
         for _, cell in ipairs(co_cells) do
             local wx, wy = cell_centre(cell.col, cell.row)
             table.insert(ground, { x = wx, y = wy, item = Items.new("compass") })
+            reserved[cell.col * 1000 + cell.row] = true
+        end
+    end
+
+    if budget >= 2 then
+        local ad_count = math.random(1, 2)
+        local ad_cells = pick_random(walkable, ad_count, reserved)
+        for _, cell in ipairs(ad_cells) do
+            local wx, wy = cell_centre(cell.col, cell.row)
+            table.insert(ground, { x = wx, y = wy, item = Items.new("adrenaline") })
             reserved[cell.col * 1000 + cell.row] = true
         end
     end

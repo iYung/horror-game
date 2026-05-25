@@ -79,6 +79,26 @@ function HUD:draw()
             local th = ITEM_FONT:getHeight()
             love.graphics.setColor(COLOR_WHITE)
             love.graphics.print(display, x + (SLOT_SIZE - tw) / 2, y + (SLOT_SIZE - th) / 2)
+
+            -- Adrenaline status overlay (active slot only)
+            if item.id == "adrenaline" and self.inventory:active_index() == i then
+                local status_label = nil
+                local status_color = nil
+                if item.boosting then
+                    status_label = "BOOST"
+                    status_color = COLOR_AMBER
+                elseif item.on_cooldown and item.cooldown_timer then
+                    local remaining = item.cooldown_timer.interval - item.cooldown_timer._t
+                    status_label = "CD " .. math.ceil(remaining) .. "s"
+                    status_color = {0.7, 0.2, 0.2, 1}
+                end
+                if status_label then
+                    local sw = ITEM_FONT:getWidth(status_label)
+                    local name_mid_y = y + (SLOT_SIZE - th) / 2
+                    love.graphics.setColor(status_color)
+                    love.graphics.print(status_label, x + (SLOT_SIZE - sw) / 2, name_mid_y + th)
+                end
+            end
         end
     end
 
@@ -121,6 +141,34 @@ function HUD:draw()
             love.graphics.setColor(1, 1, 1, 0.85)
             love.graphics.polygon("fill", 0, -18, -10, 10, 10, 10)
             love.graphics.pop()
+        end
+    end
+
+    -- Adrenaline bar: shown at compass/tracker position when boosting or on cooldown
+    if self.player then
+        local item = self.player.inventory:active()
+        if item and item.id == "adrenaline" then
+            local bar_w = 80
+            local bar_h = 8
+            local bx    = 640 - bar_w / 2
+            local by    = 676
+            local progress, fill_color
+            if item.boosting and item.boost_timer then
+                progress   = (item.boost_timer.interval - item.boost_timer._t) / item.boost_timer.interval
+                fill_color = COLOR_AMBER
+            elseif item.on_cooldown and item.cooldown_timer then
+                progress   = (item.cooldown_timer.interval - item.cooldown_timer._t) / item.cooldown_timer.interval
+                fill_color = {0.7, 0.2, 0.2, 1}
+            end
+            if fill_color then
+                love.graphics.setColor(0.15, 0.15, 0.15, 0.8)
+                love.graphics.rectangle("fill", bx, by, bar_w, bar_h)
+                love.graphics.setColor(fill_color)
+                love.graphics.rectangle("fill", bx, by, bar_w * progress, bar_h)
+                love.graphics.setColor(0.5, 0.5, 0.5, 0.8)
+                love.graphics.setLineWidth(1)
+                love.graphics.rectangle("line", bx, by, bar_w, bar_h)
+            end
         end
     end
 
