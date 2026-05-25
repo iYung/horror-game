@@ -280,8 +280,8 @@ Trait rolling (in PlanningScene): shuffle `traits.all`, greedily pick traits whi
 ### Commands
 
 ```
-love . -- --headless    # terminal output; exits 0 (all pass) or 1 (any fail)
-love . -- --watch       # same tests rendered live in 3D; press -/= to change sim speed
+love . --headless    # terminal output; exits 0 (all pass) or 1 (any fail)
+love . --watch       # same tests rendered live in 3D; press -/= to change sim speed
 ```
 
 In `--watch` mode each test coroutine drives the simulation frame-by-frame and the raycaster renders every step. Press any key on the summary screen to quit.
@@ -289,10 +289,10 @@ In `--watch` mode each test coroutine drives the simulation frame-by-frame and t
 ### File layout
 
 ```
-test/
+tests/
   runner.lua       Minimal busted-compatible framework — describe / it / assert.*
-  run_test.lua     Core game scenarios; one it() per scenario
-  *_test.lua       Any file ending in _test.lua is auto-discovered and run by both
+  test_run.lua     Core game scenarios; one it() per scenario
+  test_*.lua       Any file starting with test_ is auto-discovered and run by both
                    --headless and --watch. No changes to main.lua needed.
   watch_scene.lua  Scene3D subclass that renders Simulation._current each frame
 ```
@@ -311,7 +311,7 @@ State snapshot: `outcome`, `tick`, `player.{x,y,angle}`, `monster.{x,y,state}`, 
 
 ### The rule
 
-Every change gets two things: **run the full suite** (`--headless`) to catch regressions, and **add at least one new `it()`** in `test/run_test.lua` for the new behaviour. Both steps are required — running without adding leaves the new code untested; adding without running misses breakage in existing paths.
+Every change gets two things: **run the full suite** (`--headless`) to catch regressions, and **add at least one new `it()`** in `tests/test_run.lua` for the new behaviour. Both steps are required — running without adding leaves the new code untested; adding without running misses breakage in existing paths.
 
 ### What to add tests for
 
@@ -328,9 +328,9 @@ Every change gets two things: **run the full suite** (`--headless`) to catch reg
 
 ## Adding things
 
-**New item**: add a factory function in `items.lua` following the `make_flashlight` pattern. Give it a `value`. It will auto-appear in spawner if `value ≤ budget`. Wire `use_fn` to return a string signal if RunScene needs to react. Add a test in `test/run_test.lua`.
+**New item**: add a factory function in `items.lua` following the `make_flashlight` pattern. Give it a `value`. It will auto-appear in spawner if `value ≤ budget`. Wire `use_fn` to return a string signal if RunScene needs to react. Add a test in `tests/test_run.lua`.
 
-**New trait**: add to `traits.lua` with a cost and an `apply(monster)` stub. Implement the behaviour in `monster.lua`'s update loop checking `self.has_<traitname>`. Add a test in `test/run_test.lua` — see existing trait tests as a template.
+**New trait**: add to `traits.lua` with a cost and an `apply(monster)` stub. Implement the behaviour in `monster.lua`'s update loop checking `self.has_<traitname>`. Add a test in `tests/test_run.lua` — see existing trait tests as a template.
 
 **New map**: create `game/world/map_<name>.lua` following the `fill_rect` pattern. Add it to the map picker in `planning_scene.lua` and the loader in `run_scene.lua`. Also add it to `Simulation`'s `load_map` in `game/simulation.lua` so it can be tested headlessly. When placing wall torches, keep them off the hallway-entrance cell — shift one column away from the vertical-hallway column for top-row positions (doorways are automatically filtered but the room will lose its torch if the only position given is a doorway).
 
