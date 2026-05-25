@@ -25,8 +25,8 @@ New engine-level utilities (e.g. `camera_shake`, `pathfinder`, `fov`) should liv
 For any change to game logic: **run the existing suite, then add a new test** for the new behaviour before calling it done.
 
 ```
-love . -- --headless    # fast, exits 0/1 — run this before committing
-love . -- --watch       # visual — watch the scenarios play out in 3D
+love . --headless    # fast, exits 0/1 — run this before committing
+love . --watch       # visual — watch the scenarios play out in 3D
 ```
 
-Tests live in `test/run_test.lua`. The existing suite covers kill detection, extraction success/failure, and all four traits. Every new trait, item, or touch to monster/extraction logic needs a matching `it()` added there. See **CLAUDE.md → Testing** for what each type of change requires.
+Tests live in `tests/test_run.lua`. The existing suite covers kill detection, extraction success/failure, and all four traits. Every new trait, item, or touch to monster/extraction logic needs a matching `it()` added there. See **CLAUDE.md → Testing** for what each type of change requires.

@@ -7,9 +7,8 @@ Engine-level classes with no game-specific knowledge. Safe to reuse across proje
 ## Quick start — new 3D scene
 
 ```lua
-local Scene3D  = require("core/lua/scene_3d")
-local Map      = require("core/lua/map")
-local Player3D = require("game/player_3d")   -- move/turn with WASD
+local Scene3D = require("core/lua/scene_3d")
+local Map     = require("core/lua/map")
 
 local MyScene = setmetatable({}, { __index = Scene3D })
 MyScene.__index = MyScene
@@ -21,20 +20,22 @@ local GRID = {
     { 1,1,1,1,1 },
 }
 
+-- Minimal player state: grid position (float) and facing angle in radians.
+local px, py, angle = 2.5, 2.5, 0
+
 function MyScene.new()  return setmetatable(Scene3D.new(), MyScene) end
 function MyScene:on_enter()
-    self.map    = Map.new(GRID)
-    self.player = Player3D.new(2.5, 2.5, 0)   -- grid position, angle in radians
+    self.map = Map.new(GRID)
 end
-function MyScene:update(dt)  self.player:update(dt) end
+function MyScene:update(dt)
+    -- drive px/py/angle from your own input or player entity here
+end
 function MyScene:draw()
-    self.raycaster:draw(self.map, self.player.x, self.player.y, self.player.angle)
+    self.raycaster:draw(self.map, px, py, angle)
 end
 
 return MyScene
 ```
-
-Player3D (`game/player_3d.lua`) binds W/S to forward/back and A/D to turn. Swap it for your own if you need collision, mouse-look, etc.
 
 **Coordinate system:** positions are in grid units (float). `(1.5, 1.5)` is the centre of cell `(1,1)`. Angle `0` faces right (+x); `π/2` faces down (+y), matching Love2D's screen axes.
 
