@@ -111,12 +111,10 @@ Player position is stored in **1-indexed grid units** (`player.x`, `player.y`). 
 
 ### FOV / visibility
 
-The 2D FOV system has been replaced by **distance fog** in the raycaster. Walls and billboards fade to black beyond `fog_range` cells. RunScene picks the range based on active item:
+The 2D FOV system has been replaced by **light-based fog** in the raycaster. Walls and billboards are only visible within range of point lights; everything else is pitch black. Two light sources exist:
 
-| Active item | `fog_range` |
-|-------------|-------------|
-| None / inactive | 8 cells |
-| Flashlight (on) | 14 cells |
+- **Wall torches** — static point lights (radius 6) placed around the map
+- **Flashlight** — when any inventory slot holds a flashlight that is `active` and `on`, RunScene adds a player-centred point light (radius 6) each frame, extending how far the player can see
 
 `fov.lua` still exists but is unused in RunScene. Monster visibility (`monster.visible`) is no longer toggled — monsters render as billboards whenever they're in front of the player and not wall-occluded.
 
@@ -184,7 +182,7 @@ SPEED_BOOST  = BASE_SPEED * 0.25   -- added if Speed trait
 State machine: `wander → alerted → chase → search → wander`
 
 Trait implementations:
-- **Sight** — LOS raycast (1 px steps), 12 cells, wall-blocked. Instant chase. Loses player after 3 s without LOS. Also triggers if player has flashlight on (`active_item.id == "flashlight" and active_item.active and active_item.on`).
+- **Sight** — LOS raycast (1 px steps), 12 cells, wall-blocked. Instant chase. Loses player after 3 s without LOS. Also triggers if any inventory slot holds a flashlight that is `active` and `on` (regardless of which slot is selected).
 - **Speed** — sets `has_speed = true`, adds `SPEED_BOOST` to all movement.
 - **Smell** — `Timer(2.5)`: every 2.5 s, unconditionally sets `last_known_pos` and goes ALERTED. Global, no range, no wall blocking.
 - **Hearing** — every frame: if `player:is_moving()` and distance < 8 cells → ALERTED.
@@ -201,10 +199,11 @@ Always instantiate with `items.new(id)` — returns a fresh table. Never share i
 
 | Item | Value | Key behaviour |
 |------|-------|---------------|
-| Flashlight | 1 | Toggle on/off with `F`. Burns 120 s total (regardless of on/off). While on, extends fog range to 14 cells and triggers monster Sight glow detection. |
+| Flashlight | 1 | Toggle on/off with `F`. Burns 120 s total (regardless of on/off). While on, adds a player-centred point light (extending visibility) and triggers monster Sight glow detection — both effects apply from any inventory slot, not just the active one. |
 | Flare Gun | 0 | `use_fn` returns `"extract"`. RunScene intercepts this and calls `extraction:try_start` only if player is in zone. Renders as a pink billboard. |
 | Compass | 3 | Passive. While held as the active item, the HUD draws a directional arrow pointing toward the extraction zone. No use_fn. |
 | Tracker | 1 | Passive. While held as the active item, the HUD draws a red directional arrow pointing toward the monster. No use_fn. |
+| Adrenaline Shot | 2 | Press `F` to inject. Boosts movement speed by 1.75× for 5 s, then enters a 20 s cooldown. The boost and cooldown continue in any inventory slot — switching away does not cancel the effect. `speed_mult` is read by scanning all slots, not just the active one. |
 
 Items only spawn if their `value ≤ budget`. Flare gun (`value=0`) always spawns.
 

@@ -178,8 +178,14 @@ function Monster:update(dt, player)
     end
 
     if self.has_sight then
-        local active_item    = player:active_item()
-        local flashlight_glow = active_item and active_item.id == "flashlight" and active_item.active and active_item.on
+        local flashlight_glow = false
+        for i = 1, 5 do
+            local item = player.inventory.slots[i]
+            if item and item.id == "flashlight" and item.active and item.on then
+                flashlight_glow = true
+                break
+            end
+        end
 
         if self.state == "chase" then
             if los_clear(self.map, mx, my, px, py) then

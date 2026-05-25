@@ -167,10 +167,11 @@ local function build_lights(self)
     for _, t in ipairs(self.map.torches) do
         table.insert(lights, { x = t.col + 0.5, y = t.row + 0.5, radius = 6, intensity = 1.0 })
     end
-    local item = self.player:active_item()
-    if item then
-        if item.id == "flashlight" and item.active and item.on then
+    for i = 1, 5 do
+        local item = self.player.inventory.slots[i]
+        if item and item.id == "flashlight" and item.active and item.on then
             table.insert(lights, { x = self.player.x, y = self.player.y, radius = 6, intensity = 1.0 })
+            break
         end
     end
     return lights
