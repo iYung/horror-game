@@ -187,4 +187,36 @@ describe("Simulation", function()
         assert.is_true(item.speed_mult > 1.0)
     end)
 
+    it("taser stuns monster when within range", function()
+        local sim = Simulation.new(make_config({
+            budget       = 5,
+            loadout_item = Items.new("taser"),
+        }))
+
+        sim.monster.x       = 192 + 64
+        sim.monster.y       = 160
+        sim.monster.on_kill = nil
+
+        sim:step(1 / 60, { use = true })
+
+        assert.is_true(sim.monster.stunned)
+    end)
+
+    it("taser is consumed but does not stun when monster is out of range", function()
+        local taser = Items.new("taser")
+        local sim   = Simulation.new(make_config({
+            budget       = 5,
+            loadout_item = taser,
+        }))
+
+        sim.monster.x       = 192 + 200
+        sim.monster.y       = 160
+        sim.monster.on_kill = nil
+
+        sim:step(1 / 60, { use = true })
+
+        assert.is_false(sim.monster.stunned)
+        assert.is_true(taser.used)
+    end)
+
 end)

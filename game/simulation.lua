@@ -58,6 +58,28 @@ function Simulation.new(run_config)
     self.ground_items = ItemSpawner.spawn(map, run_config.budget)
     self.extraction   = Extraction.new(map)
 
+    local function wrap_taser(item)
+        if not item or item.id ~= "taser" or item._taser_wrapped then return end
+        item._taser_wrapped = true
+        local original_use = item.use_fn
+        local monster_ref  = self.monster
+        item.use_fn = function(p, world)
+            local result = original_use(p, world)
+            if result == "stun" then
+                local pc   = p:centre()
+                local dx   = monster_ref.x - pc.x
+                local dy   = monster_ref.y - pc.y
+                local d_px = math.sqrt(dx * dx + dy * dy)
+                if d_px <= 96 then
+                    monster_ref:stun(4)
+                end
+            end
+        end
+    end
+
+    for _, entry in ipairs(self.ground_items) do wrap_taser(entry.item) end
+    for i = 1, 5 do wrap_taser(self.player.inventory.slots[i]) end
+
     self._outcome  = nil
     self._tick     = 0
     self._yield_fn = Simulation._watching and coroutine.yield or nil

@@ -204,6 +204,7 @@ Always instantiate with `items.new(id)` — returns a fresh table. Never share i
 | Compass | 3 | Passive. While held as the active item, the HUD draws a directional arrow pointing toward the extraction zone. No use_fn. |
 | Tracker | 1 | Passive. While held as the active item, the HUD draws a red directional arrow pointing toward the monster. No use_fn. |
 | Adrenaline Shot | 2 | Press `F` to inject. Boosts movement speed by 1.75× for 5 s, then enters a 20 s cooldown. The boost and cooldown continue in any inventory slot — switching away does not cancel the effect. `speed_mult` is read by scanning all slots, not just the active one. |
+| Taser | 5 | Press `F` to fire. Stuns the monster for 4 s if it is within 96 px (3 cells). Always consumed on use — no refund if out of range. |
 
 Items only spawn if their `value ≤ budget`. Flare gun (`value=0`) always spawns.
 

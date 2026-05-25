@@ -34,6 +34,24 @@ local function wrap_flare_gun(item, extraction)
     end
 end
 
+local function wrap_taser(item, monster, player)
+    if item._taser_wrapped then return end
+    item._taser_wrapped = true
+    local original_use = item.use_fn
+    item.use_fn = function(p, world)
+        local result = original_use(p, world)
+        if result == "stun" then
+            local pc   = p:centre()
+            local dx   = monster.x - pc.x
+            local dy   = monster.y - pc.y
+            local d_px = math.sqrt(dx * dx + dy * dy)
+            if d_px <= 96 then
+                monster:stun(4)
+            end
+        end
+    end
+end
+
 function RunScene.new(run_config, save_state)
     local self = setmetatable(Scene3D.new(), RunScene)
     self.run_config  = run_config
@@ -93,6 +111,14 @@ function RunScene:on_enter()
     for _, entry in ipairs(self.ground_items) do maybe_wrap(entry.item) end
     for i = 1, 5 do maybe_wrap(self.player.inventory.slots[i]) end
 
+    local function maybe_wrap_taser(item)
+        if item and item.id == "taser" then
+            wrap_taser(item, self.monster, self.player)
+        end
+    end
+    for _, entry in ipairs(self.ground_items) do maybe_wrap_taser(entry.item) end
+    for i = 1, 5 do maybe_wrap_taser(self.player.inventory.slots[i]) end
+
     self.player.on_use = function(p) end
 
     self.player.on_pickup = function(entry)
@@ -103,6 +129,7 @@ function RunScene:on_enter()
             end
         end
         maybe_wrap(entry.item)
+        maybe_wrap_taser(entry.item)
     end
 end
 
@@ -197,6 +224,7 @@ local function build_sprites(self)
                    or id == "compass"    and {0.3, 0.8, 1.0, 1}
                    or id == "tracker"   and {1, 0.4, 0.1, 1}
                    or id == "adrenaline" and {0.2, 1.0, 0.4, 1}
+                   or id == "taser"      and {0.3, 0.8, 1.0, 1}
                    or                       {1, 0.9, 0.3, 1}
         table.insert(sprites, {
             x     = entry.x / CELL + 1,

@@ -78,6 +78,8 @@ function Monster.new(x, y, map, shake, traits_list)
 
     self.smell_timer      = Timer.new(2.5)
     self.step_timer       = Timer.new(0.5)
+    self.stunned    = false
+    self.stun_timer = nil
 
     local walkable        = map:walkable_cells()
     self._walkable        = walkable
@@ -100,6 +102,11 @@ function Monster.new(x, y, map, shake, traits_list)
     end
 
     return self
+end
+
+function Monster:stun(duration)
+    self.stunned    = true
+    self.stun_timer = Timer.new(duration)
 end
 
 local function centre(self)
@@ -159,6 +166,14 @@ local function transition(self, state)
 end
 
 function Monster:update(dt, player)
+    if self.stunned then
+        if self.stun_timer and self.stun_timer:update(dt) then
+            self.stunned    = false
+            self.stun_timer = nil
+        end
+        return
+    end
+
     local mx, my   = self.x, self.y
     local pc       = player:centre()
     local px, py   = pc.x, pc.y
