@@ -20,7 +20,7 @@ local Timer = require("core/lua/timer")
 local Extraction = {}
 Extraction.__index = Extraction
 
-Extraction.DURATION = 60
+Extraction.DURATION = 30
 
 function Extraction.new(map)
     local self = setmetatable({}, Extraction)
@@ -28,6 +28,7 @@ function Extraction.new(map)
     self._timer      = nil
     self._elapsed    = 0
     self.discovered  = false
+    self._ready      = false
     return self
 end
 
@@ -56,9 +57,17 @@ function Extraction:try_start(player)
     return true
 end
 
+function Extraction:is_ready()
+    return self._ready
+end
+
 function Extraction:update(dt, player)
     if self:in_zone(player) and not self.discovered then
         self.discovered = true
+    end
+
+    if self._ready and self:in_zone(player) then
+        return "extracted"
     end
 
     if not self._timer then return nil end
@@ -69,7 +78,8 @@ function Extraction:update(dt, player)
         if self:in_zone(player) then
             return "extracted"
         else
-            return "failed"
+            self._ready = true
+            return nil
         end
     end
 

@@ -49,7 +49,46 @@ describe("Simulation", function()
 
         local state = sim:run_until(function(s)
             return s.outcome ~= nil
-        end, { max_seconds = 70 })
+        end, { max_seconds = 40 })
+
+        assert.are.equal("extracted", state.outcome)
+    end)
+
+    it("player extracts after returning to zone post-countdown", function()
+        local sim = Simulation.new(make_config())
+
+        -- Move player to extraction zone (forest map: grid unit 35.5, 25.5)
+        sim.player.x = 35.5
+        sim.player.y = 25.5
+
+        -- Move monster away and disable kill callback
+        sim.monster.x      = 192
+        sim.monster.y      = 160
+        sim.monster.on_kill = nil
+
+        -- Start extraction countdown; player is in zone so this must return true
+        local started = sim.extraction:try_start(sim.player)
+        assert.is_true(started)
+
+        -- Move player OUT of the extraction zone before the timer fires
+        sim.player.x = 6.5
+        sim.player.y = 5.5
+
+        -- Run until outcome is set or max_seconds reached.
+        -- Player is out of zone, so the timer will fire without extracting —
+        -- run_until will return at max_seconds with outcome == nil.
+        local mid = sim:run_until(function(s)
+            return s.outcome ~= nil
+        end, { max_seconds = 40 })
+
+        assert.is_nil(mid.outcome)
+
+        -- Teleport player back into the extraction zone
+        sim.player.x = 35.5
+        sim.player.y = 25.5
+
+        -- One frame should trigger the ready-state check and extract the player
+        local state = sim:step(1 / 60)
 
         assert.are.equal("extracted", state.outcome)
     end)

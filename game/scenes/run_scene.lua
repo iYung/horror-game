@@ -160,13 +160,6 @@ function RunScene:update(dt)
     self.monster:update(dt, self.player)
 
     local result = self.extraction:update(dt, self.player)
-    if result == "failed" and not self._extracted then
-        self._extracted = true
-        local manager     = require("game/scene_ref").manager
-        local ResultScene = require("game/scenes/result_scene")
-        manager:switch(ResultScene.new({ outcome = "failed", save_state = self.save_state }))
-        return
-    end
     if result == "extracted" and not self._extracted then
         self._extracted = true
         local stash = self.save_state.stash
