@@ -29,6 +29,7 @@ local function wrap_flare_gun(item, extraction)
             local result = original_use(p, world)
             if result == "extract" then
                 extraction:try_start(p)
+                p.inventory:remove_item_by_ref(item)
             end
         end
     end
