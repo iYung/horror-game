@@ -112,6 +112,17 @@ function HUD:draw()
         local ey = 720 - EXTRACT_BOTTOM - th
         love.graphics.setColor(COLOR_AMBER)
         love.graphics.print(label, ex, ey)
+    elseif self.extraction:is_ready() then
+        local t     = love.timer.getTime()
+        local alpha = 0.6 + 0.4 * math.abs(math.sin(t * 3))
+        local label = "RETURN TO EXTRACT"
+        love.graphics.setFont(EXTRACT_FONT)
+        local tw = EXTRACT_FONT:getWidth(label)
+        local th = EXTRACT_FONT:getHeight()
+        local ex = 1280 - EXTRACT_RIGHT - tw
+        local ey = 720 - EXTRACT_BOTTOM - th
+        love.graphics.setColor(1, 0.8, 0.2, alpha)
+        love.graphics.print(label, ex, ey)
     elseif self.extraction.discovered then
         local t     = love.timer.getTime()
         local alpha = 0.4 + 0.6 * (0.5 + 0.5 * math.sin(t * math.pi * 2))

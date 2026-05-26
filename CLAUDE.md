@@ -98,7 +98,7 @@ Player position is stored in **1-indexed grid units** (`player.x`, `player.y`). 
 1. `player:update(dt)`
 2. `monster:update(dt, player)`
 3. Item timers (flashlight burn down)
-4. `extraction:update(dt, player)` — `"extracted"` or `"failed"` both transition to `ResultScene`
+4. `extraction:update(dt, player)` — `"extracted"` transitions to `ResultScene`
 5. `shake:update(dt)` → store `_shake_angle`
 
 ### Draw order (each frame)
@@ -148,12 +148,13 @@ Used only by monster WANDER/ALERTED/SEARCH states. Monster ignores wall collisio
 
 ### Extraction (`game/systems/extraction.lua`)
 
-`try_start(player)` — starts 60 s countdown if player is inside `map.extraction.radius`. Returns true/false.
+`try_start(player)` — starts 30 s countdown if player is inside `map.extraction.radius`. Returns true/false.
 
 `update(dt, player)` returns:
-- `"extracted"` when timer hits 0 and player is in zone
-- `"failed"` when timer hits 0 and player is not in zone
-- `nil` otherwise
+- `"extracted"` when timer hits 0 and player is in zone, or when `is_ready()` is true and player enters zone
+- `nil` otherwise — if the timer fires and the player is out of zone, `_ready` is set to true and extraction stays "hot"
+
+`is_ready()` — returns true after the countdown has elapsed but the player has not yet stepped back in; used by HUD to show a pulsing `"RETURN TO EXTRACT"` label.
 
 `discovered` flips true the first time `in_zone` is true — used by HUD to show the extract indicator.
 
@@ -321,7 +322,7 @@ Every change gets two things: **run the full suite** (`--headless`) to catch reg
 | New trait | All existing trait tests | Positive case (stimulus → correct state within known time). If trigger is conditional (like hearing needing movement), add a negative case too. Mirror smell/hearing/sight tests. |
 | New item | Kill + extraction tests | `use_fn` returns the right signal; interaction with extraction or inventory works. For passive items (no `use_fn`), a smoke test confirming no errors over several frames is sufficient. |
 | Monster update order | Kill test (ordering is load-bearing) | None required if existing kill test still passes. |
-| Extraction logic | Both extraction tests (success + failed) | None required if both still pass. |
+| Extraction logic | All extraction tests (in-zone, returning-to-zone) | None required if all still pass. |
 | New map | Smoke-run: `Simulation.new({ map_id = "yourmap", ... }):step(1/60)` | At minimum, that smoke step should not error. Add spawn/extraction coord checks if coords were non-obvious. |
 | Player movement / collision | Hearing trait tests (depend on `is_moving`) | Step sequence that injects `fwd` and asserts `player.x/y` changed. |
 
