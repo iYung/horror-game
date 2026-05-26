@@ -58,6 +58,23 @@ function Simulation.new(run_config)
     self.ground_items = ItemSpawner.spawn(map, run_config.budget)
     self.extraction   = Extraction.new(map)
 
+    local extraction_ref = self.extraction
+
+    local function wrap_flare_gun(item)
+        if not item or item.id ~= "flare_gun" or item._extraction_wrapped then return end
+        item._extraction_wrapped = true
+        local original_use = item.use_fn
+        item.use_fn = function(p, world)
+            if extraction_ref:in_zone(p) then
+                local result = original_use(p, world)
+                if result == "extract" then
+                    extraction_ref:try_start(p)
+                    p.inventory:remove_item_by_ref(item)
+                end
+            end
+        end
+    end
+
     local function wrap_taser(item)
         if not item or item.id ~= "taser" or item._taser_wrapped then return end
         item._taser_wrapped = true
@@ -77,8 +94,21 @@ function Simulation.new(run_config)
         end
     end
 
+    for _, entry in ipairs(self.ground_items) do wrap_flare_gun(entry.item) end
+    for i = 1, 5 do wrap_flare_gun(self.player.inventory.slots[i]) end
     for _, entry in ipairs(self.ground_items) do wrap_taser(entry.item) end
     for i = 1, 5 do wrap_taser(self.player.inventory.slots[i]) end
+
+    self.player.on_pickup = function(entry)
+        for i = #self.ground_items, 1, -1 do
+            if self.ground_items[i] == entry then
+                table.remove(self.ground_items, i)
+                break
+            end
+        end
+        wrap_flare_gun(entry.item)
+        wrap_taser(entry.item)
+    end
 
     self._outcome  = nil
     self._tick     = 0

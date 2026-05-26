@@ -201,7 +201,7 @@ Always instantiate with `items.new(id)` — returns a fresh table. Never share i
 | Item | Value | Key behaviour |
 |------|-------|---------------|
 | Flashlight | 1 | Toggle on/off with `F`. Burns 120 s total (regardless of on/off). While on, adds a player-centred point light (extending visibility) and triggers monster Sight glow detection — both effects apply from any inventory slot, not just the active one. |
-| Flare Gun | 0 | `use_fn` returns `"extract"`. RunScene intercepts this and calls `extraction:try_start` only if player is in zone. Renders as a pink billboard. |
+| Flare Gun | 0 | `use_fn` returns `"extract"`. RunScene intercepts this, calls `extraction:try_start` only if player is in zone, then removes the item from inventory. Renders as a pink billboard. |
 | Compass | 3 | Passive. While held as the active item, the HUD draws a directional arrow pointing toward the extraction zone. No use_fn. |
 | Tracker | 1 | Passive. While held as the active item, the HUD draws a red directional arrow pointing toward the monster. No use_fn. |
 | Adrenaline Shot | 2 | Press `F` to inject. Boosts movement speed by 1.75× for 5 s, then enters a 20 s cooldown. The boost and cooldown continue in any inventory slot — switching away does not cancel the effect. `speed_mult` is read by scanning all slots, not just the active one. |

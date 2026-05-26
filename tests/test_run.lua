@@ -242,6 +242,37 @@ describe("Simulation", function()
         assert.is_nil(sim.player.inventory:active())
     end)
 
+    it("flare gun is consumed after use in extraction zone", function()
+        local sim = Simulation.new(make_config({
+            loadout_item = Items.new("flare_gun"),
+        }))
+
+        -- Move player into the extraction zone (forest: grid unit 35.5, 25.5)
+        sim.player.x = 35.5
+        sim.player.y = 25.5
+        sim.monster.on_kill = nil
+
+        sim:step(1 / 60, { use = true })
+
+        assert.is_nil(sim.player.inventory:active())
+        assert.is_true(sim.extraction:is_active())
+    end)
+
+    it("flare gun is not consumed when used outside extraction zone", function()
+        local flare = Items.new("flare_gun")
+        local sim   = Simulation.new(make_config({
+            loadout_item = flare,
+        }))
+
+        -- Player starts at spawn, far from extraction — use should do nothing
+        sim.monster.on_kill = nil
+
+        sim:step(1 / 60, { use = true })
+
+        assert.are.equal(flare, sim.player.inventory:active())
+        assert.is_false(sim.extraction:is_active())
+    end)
+
     it("taser is consumed but does not stun when monster is out of range", function()
         local taser = Items.new("taser")
         local sim   = Simulation.new(make_config({
