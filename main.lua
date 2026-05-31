@@ -50,10 +50,14 @@ elseif watch then
 else
     local SceneManager  = require("core/lua/scene_manager")
     local PlanningScene = require("game/scenes/planning_scene")
+    local SettingsState = require("game/settings_state")
+    local SettingsMenu  = require("game/scenes/settings_menu")
     local scene_ref     = require("game/scene_ref")
 
     local manager = SceneManager.new()
     scene_ref.manager = manager
+    local ss = SettingsState.new()
+    local settings_menu = SettingsMenu.new(ss)
 
     function love.load()
         love.window.setMode(1280, 720)
@@ -62,14 +66,35 @@ else
     end
 
     function love.update(dt)
-        manager:update(dt)
+        if settings_menu.is_open then
+            settings_menu:update(dt)
+        else
+            manager:update(dt)
+        end
     end
 
     function love.draw()
         manager:draw()
+        if settings_menu.is_open then
+            settings_menu:draw()
+        end
     end
 
     function love.keypressed(key)
+        if settings_menu.is_open then
+            if settings_menu:keypressed(key) then return end
+        end
+        if key == "escape" then
+            local cur = manager.current
+            if cur and cur.esc_opens_settings then
+                if settings_menu.is_open then
+                    settings_menu:close()
+                else
+                    settings_menu:open(cur.esc_settings_opaque or false)
+                end
+                return
+            end
+        end
         if manager.current and manager.current.keypressed then
             manager.current:keypressed(key)
         end
