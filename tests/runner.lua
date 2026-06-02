@@ -86,11 +86,7 @@ local function run(test_files)
 
     print(string.format("\n%d passed, %d failed\n", results.pass, results.fail))
 
-    if results.fail > 0 then
-        love.event.quit(1)
-    else
-        love.event.quit(0)
-    end
+    os.exit(results.fail > 0 and 1 or 0)
 end
 
 -- Collect tests as {name, fn} pairs without running them (watch mode).

@@ -50,6 +50,8 @@ function PlanningScene.new(save_state)
     self.map_idx       = 1
     self.budget        = 0
     self.loadout_idx   = 0
+    self.esc_opens_settings  = true
+    self.esc_settings_opaque = true
     return self
 end
 

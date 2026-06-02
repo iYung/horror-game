@@ -59,6 +59,7 @@ function RunScene.new(run_config, save_state)
     self.save_state  = save_state
     self._dead       = false
     self._extracted  = false
+    self.esc_opens_settings = true
     return self
 end
 
@@ -265,14 +266,6 @@ function RunScene:draw()
     )
     -- 2D overlay: HUD drawn in screen space after the 3D pass
     self.drawer:draw()
-end
-
-function RunScene:keypressed(key)
-    if key == "escape" then
-        local manager       = require("game/scene_ref").manager
-        local PlanningScene = require("game/scenes/planning_scene")
-        manager:switch(PlanningScene.new(self.save_state))
-    end
 end
 
 return RunScene

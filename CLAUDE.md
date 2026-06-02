@@ -13,11 +13,12 @@ core/lua/       Engine primitives — no game knowledge, reusable across project
 game/
   data/         Static definitions: items and traits
   entities/     Player and monster
-  scenes/       One file per screen (planning, trait reveal, run, result)
+  scenes/       One file per screen (planning, trait reveal, run, result, settings_menu)
   systems/      Stateful subsystems: inventory, pathfinder, shake, extraction (fov.lua exists but unused in 3D)
   ui/           HUD
   world/        Map grid, two map layouts, item spawner
-main.lua        Entry point — wires SceneManager and initial scene
+  settings_state.lua   SettingsState — fullscreen bool + toggle_fullscreen()
+main.lua        Entry point — wires SceneManager, SettingsState, SettingsMenu, and initial scene
 ```
 
 ---
@@ -54,6 +55,14 @@ require("game/scene_ref").manager:switch(NextScene.new(...))
 ```
 
 `scene_ref.lua` is a singleton `{ manager = nil }` set at startup to avoid circular requires.
+
+### Settings menu
+
+`main.lua` also owns a `SettingsState` and a `SettingsMenu` instance (normal game path only). `SettingsState` is constructed at module level; `SettingsMenu.new(ss)` is called inside `love.load()` after `love.window.setMode` — **never at module level**, because `SettingsMenu.new` calls `love.graphics.newImage` and `love.graphics.newFont`, which require the graphics subsystem to be fully initialised (calling them before `love.load` hangs on headless CI runners with no display).
+
+Pressing `Escape` in any scene that has `self.esc_opens_settings = true` opens the overlay. If `self.esc_settings_opaque = true` (PlanningScene), the overlay draws a full background; otherwise (RunScene) it draws a semi-transparent dim rect. While open, `love.update` calls `settings_menu:update(dt)` instead of `manager:update(dt)`, pausing the game. `love.draw` always calls `manager:draw()` then draws the overlay on top.
+
+`SettingsMenu` reads `love.keyboard.isDown` directly with edge-trigger `_prev_*` flags. Items: **Fullscreen / Window** (calls `settings_state:toggle_fullscreen()`), **Exit Settings** (closes overlay), **Leave Game** (`love.event.quit()`).
 
 ---
 
