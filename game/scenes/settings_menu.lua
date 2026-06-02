@@ -10,11 +10,7 @@ local BTN_H   = 54
 local BTN_X   = (W - BTN_W) / 2
 local BTN_GAP = 74
 
-local _img_btn     = love.graphics.newImage("assets/menu_btn.png")
-local _img_btn_sel = love.graphics.newImage("assets/menu_btn_selected.png")
-local _img_bg      = love.graphics.newImage("assets/settings_background.png")
-local _font_btn    = love.graphics.newFont(22)
-local _btn_y0      = H / 2 - (#ITEMS - 1) * BTN_GAP / 2 - BTN_H / 2
+local _btn_y0 = H / 2 - (#ITEMS - 1) * BTN_GAP / 2 - BTN_H / 2
 
 function SettingsMenu.new(settings_state)
   local self = setmetatable({}, SettingsMenu)
@@ -26,6 +22,10 @@ function SettingsMenu.new(settings_state)
   self._prev_down    = false
   self._prev_confirm = false
   self._prev_escape  = false
+  self._img_btn     = love.graphics.newImage("assets/menu_btn.png")
+  self._img_btn_sel = love.graphics.newImage("assets/menu_btn_selected.png")
+  self._img_bg      = love.graphics.newImage("assets/settings_background.png")
+  self._font_btn    = love.graphics.newFont(22)
   return self
 end
 
@@ -85,11 +85,11 @@ end
 
 function SettingsMenu:draw()
   local prev_font = love.graphics.getFont()
-  love.graphics.setFont(_font_btn)
+  love.graphics.setFont(self._font_btn)
 
   if self._opaque then
     love.graphics.setColor(1, 1, 1, 1)
-    love.graphics.draw(_img_bg, 0, 0)
+    love.graphics.draw(self._img_bg, 0, 0)
   else
     love.graphics.setColor(0, 0, 0, 0.55)
     love.graphics.rectangle("fill", 0, 0, W, H)
@@ -97,7 +97,7 @@ function SettingsMenu:draw()
 
   for i = 1, #ITEMS do
     local y   = _btn_y0 + (i - 1) * BTN_GAP
-    local img = (i == self.selected) and _img_btn_sel or _img_btn
+    local img = (i == self.selected) and self._img_btn_sel or self._img_btn
     love.graphics.setColor(1, 1, 1, 1)
     love.graphics.draw(img, BTN_X, y)
 
@@ -108,7 +108,7 @@ function SettingsMenu:draw()
       label = ITEMS[i]
     end
 
-    local ty = y + (BTN_H - _font_btn:getHeight()) / 2
+    local ty = y + (BTN_H - self._font_btn:getHeight()) / 2
     love.graphics.printf(label, BTN_X, ty, BTN_W, "center")
   end
 

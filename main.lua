@@ -57,11 +57,12 @@ else
     local manager = SceneManager.new()
     scene_ref.manager = manager
     local ss = SettingsState.new()
-    local settings_menu = SettingsMenu.new(ss)
+    local settings_menu
 
     function love.load()
         love.window.setMode(1280, 720)
         love.window.setTitle("NIGHTFALL")
+        settings_menu = SettingsMenu.new(ss)
         manager:switch(PlanningScene.new())
     end
 
