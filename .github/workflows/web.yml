@@ -80,7 +80,7 @@ jobs:
           issue-number: ${{ github.event.pull_request.number }}
           body-includes: 'Web preview'
           body: |
-            🌐 **Web preview:** https://iyung.github.io/horror-game/pr-${{ github.event.pull_request.number }}/
+            🌐 **Web preview:** https://ivankhyung.com/horror-game/pr-${{ github.event.pull_request.number }}/
 
   cleanup-pr:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
