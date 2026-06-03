@@ -66,6 +66,24 @@ Pressing `Escape` in any scene that has `self.esc_opens_settings = true` opens t
 
 ---
 
+## Web build
+
+The game deploys to GitHub Pages as a playable web build via love.js.
+
+```
+npm install          # installs love.js@11.4.1
+npm run build        # runs scripts/build_web.sh → outputs to web/
+```
+
+`scripts/build_web.sh` zips `main.lua conf.lua assets/ core/ game/` into a `.love` archive, passes it through love.js, then injects `web-template/controls.js` (touch/WASD overlay) into the output HTML.
+
+CI (`.github/workflows/web.yml`) does this automatically:
+- Push to `master` → deploys to `https://ivankhyung.com/horror-game/`
+- Open/update a PR → deploys a preview to `https://ivankhyung.com/horror-game/pr-N/` and posts a comment with the link
+- Close a PR → removes the `pr-N/` directory from gh-pages
+
+---
+
 ## Phase 1 — PlanningScene
 
 Player configures the next run:

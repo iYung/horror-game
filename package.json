@@ -1,0 +1,10 @@
+{
+  "name": "nightfall",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "bash scripts/build_web.sh"
+  },
+  "devDependencies": {
+    "love.js": "11.4.1"
+  }
+}

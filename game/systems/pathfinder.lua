@@ -105,41 +105,40 @@ function Pathfinder:find(start_col, start_row, goal_col, goal_row)
         local cr      = current.row
         local ck      = node_key(cc, cr)
 
-        if closed[ck] then goto continue end
-        closed[ck] = true
-        count      = count + 1
+        if not closed[ck] then
+            closed[ck] = true
+            count      = count + 1
 
-        if count > NODE_CAP then return nil end
+            if count > NODE_CAP then return nil end
 
-        if cc == goal_col and cr == goal_row then
-            local path = {}
-            local node = { col = cc, row = cr, key = ck }
-            while node do
-                table.insert(path, 1, { col = node.col, row = node.row })
-                node = came[node.key]
+            if cc == goal_col and cr == goal_row then
+                local path = {}
+                local node = { col = cc, row = cr, key = ck }
+                while node do
+                    table.insert(path, 1, { col = node.col, row = node.row })
+                    node = came[node.key]
+                end
+                return path
             end
-            return path
-        end
 
-        local cg = g_score[ck] or math.huge
+            local cg = g_score[ck] or math.huge
 
-        for _, d in ipairs(DIRS) do
-            local nc = cc + d[1]
-            local nr = cr + d[2]
-            local nk = node_key(nc, nr)
+            for _, d in ipairs(DIRS) do
+                local nc = cc + d[1]
+                local nr = cr + d[2]
+                local nk = node_key(nc, nr)
 
-            if not map:is_wall(nc, nr) and not closed[nk] then
-                local tentative = cg + 1
-                if tentative < (g_score[nk] or math.huge) then
-                    g_score[nk] = tentative
-                    came[nk]    = { col = cc, row = cr, key = ck }
-                    heap_push(open, { col = nc, row = nr,
-                        f = tentative + heuristic(nc, nr, goal_col, goal_row) })
+                if not map:is_wall(nc, nr) and not closed[nk] then
+                    local tentative = cg + 1
+                    if tentative < (g_score[nk] or math.huge) then
+                        g_score[nk] = tentative
+                        came[nk]    = { col = cc, row = cr, key = ck }
+                        heap_push(open, { col = nc, row = nr,
+                            f = tentative + heuristic(nc, nr, goal_col, goal_row) })
+                    end
                 end
             end
         end
-
-        ::continue::
     end
 
     return nil
