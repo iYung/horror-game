@@ -41,16 +41,18 @@
     '  margin: 0;',
     '  box-sizing: border-box;',
     '}',
+    // Left cluster: 3 cols × 2 rows — Q/W/E top, A/S/D bottom
     '#game-controls .cluster-left {',
     '  display: grid;',
     '  grid-template-columns: repeat(3, 60px);',
     '  grid-template-rows: repeat(2, 60px);',
     '  gap: 6px;',
     '}',
+    // Right cluster: 2 cols × 4 rows
     '#game-controls .cluster-right {',
     '  display: grid;',
     '  grid-template-columns: repeat(2, 60px);',
-    '  grid-template-rows: repeat(2, 60px);',
+    '  grid-template-rows: repeat(4, 60px);',
     '  gap: 6px;',
     '}',
     '#game-controls button {',
@@ -69,34 +71,22 @@
     '#game-controls button:active {',
     '  background: rgba(255,255,255,0.35);',
     '}',
-    '#game-controls .btn-w {',
-    '  grid-column: 2;',
-    '  grid-row: 1;',
-    '}',
-    '#game-controls .btn-a {',
-    '  grid-column: 1;',
-    '  grid-row: 2;',
-    '}',
-    '#game-controls .btn-s {',
-    '  grid-column: 2;',
-    '  grid-row: 2;',
-    '}',
-    '#game-controls .btn-d {',
-    '  grid-column: 3;',
-    '  grid-row: 2;',
-    '}',
-    '#game-controls .btn-f {',
-    '  grid-column: 1;',
-    '  grid-row: 1;',
-    '}',
-    '#game-controls .btn-g {',
-    '  grid-column: 2;',
-    '  grid-row: 1;',
-    '}',
-    '#game-controls .btn-esc {',
-    '  grid-column: 1 / span 2;',
-    '  grid-row: 2;',
-    '}'
+    // Left cluster positions
+    '#game-controls .btn-q  { grid-column: 1; grid-row: 1; }',
+    '#game-controls .btn-w  { grid-column: 2; grid-row: 1; }',
+    '#game-controls .btn-e  { grid-column: 3; grid-row: 1; }',
+    '#game-controls .btn-a  { grid-column: 1; grid-row: 2; }',
+    '#game-controls .btn-s  { grid-column: 2; grid-row: 2; }',
+    '#game-controls .btn-d  { grid-column: 3; grid-row: 2; }',
+    // Right cluster positions (col 1 / col 2, rows 1–4)
+    '#game-controls .btn-up    { grid-column: 1; grid-row: 1; }',
+    '#game-controls .btn-f     { grid-column: 2; grid-row: 1; }',
+    '#game-controls .btn-down  { grid-column: 1; grid-row: 2; }',
+    '#game-controls .btn-g     { grid-column: 2; grid-row: 2; }',
+    '#game-controls .btn-l     { grid-column: 1; grid-row: 3; }',
+    '#game-controls .btn-m     { grid-column: 2; grid-row: 3; }',
+    '#game-controls .btn-enter { grid-column: 1; grid-row: 4; }',
+    '#game-controls .btn-esc   { grid-column: 2; grid-row: 4; }'
   ].join('\n');
   document.head.appendChild(style);
 
@@ -104,8 +94,12 @@
   // determine which key was pressed. Synthetic events default to keyCode=0
   // which SDL maps to nothing, so all button presses are silently ignored.
   var KEY_CODES = {
-    'w': 87, 'a': 65, 's': 83, 'd': 68,
-    'f': 70, 'g': 71, 'Escape': 27
+    'q': 81, 'w': 87, 'e': 69,
+    'a': 65, 's': 83, 'd': 68,
+    'ArrowUp': 38, 'f': 70,
+    'ArrowDown': 40, 'g': 71,
+    'l': 76, 'm': 77,
+    'Enter': 13, 'Escape': 27
   };
 
   document.addEventListener('DOMContentLoaded', function () {
@@ -123,86 +117,59 @@
     }
 
     function attachButton(btn, key, code) {
-      btn.addEventListener('mousedown', function () {
-        fireKey('keydown', key, code);
-      });
-      btn.addEventListener('mouseup', function () {
-        fireKey('keyup', key, code);
-      });
-      btn.addEventListener('mouseleave', function () {
-        fireKey('keyup', key, code);
-      });
+      btn.addEventListener('mousedown', function () { fireKey('keydown', key, code); });
+      btn.addEventListener('mouseup',   function () { fireKey('keyup',   key, code); });
+      btn.addEventListener('mouseleave',function () { fireKey('keyup',   key, code); });
       btn.addEventListener('touchstart', function (e) {
-        e.preventDefault();
-        fireKey('keydown', key, code);
+        e.preventDefault(); fireKey('keydown', key, code);
       }, { passive: false });
       btn.addEventListener('touchend', function (e) {
-        e.preventDefault();
-        fireKey('keyup', key, code);
+        e.preventDefault(); fireKey('keyup', key, code);
       }, { passive: false });
       btn.addEventListener('touchcancel', function (e) {
-        e.preventDefault();
-        fireKey('keyup', key, code);
+        e.preventDefault(); fireKey('keyup', key, code);
       }, { passive: false });
+    }
+
+    function makeBtn(cls, label, key, code) {
+      var b = document.createElement('button');
+      b.className = cls;
+      b.textContent = label;
+      attachButton(b, key, code);
+      return b;
     }
 
     var controls = document.createElement('div');
     controls.id = 'game-controls';
 
-    // Left cluster: WASD movement
-    var leftCluster = document.createElement('div');
-    leftCluster.className = 'cluster-left';
+    // Left cluster: Q/W/E (inventory prev, forward, inventory next)
+    //               A/S/D (turn left, back, turn right)
+    var left = document.createElement('div');
+    left.className = 'cluster-left';
+    left.appendChild(makeBtn('btn-q', 'Q', 'q', 'KeyQ'));
+    left.appendChild(makeBtn('btn-w', 'W', 'w', 'KeyW'));
+    left.appendChild(makeBtn('btn-e', 'E', 'e', 'KeyE'));
+    left.appendChild(makeBtn('btn-a', 'A', 'a', 'KeyA'));
+    left.appendChild(makeBtn('btn-s', 'S', 's', 'KeyS'));
+    left.appendChild(makeBtn('btn-d', 'D', 'd', 'KeyD'));
 
-    var btnW = document.createElement('button');
-    btnW.className = 'btn-w';
-    btnW.textContent = 'W';
-    attachButton(btnW, 'w', 'KeyW');
+    // Right cluster: ↑/F  (budget up / use item)
+    //                ↓/G  (budget down / grab)
+    //                L/M  (loadout / map)
+    //                ↵/Esc (confirm+advance / settings)
+    var right = document.createElement('div');
+    right.className = 'cluster-right';
+    right.appendChild(makeBtn('btn-up',    '↑',   'ArrowUp',   'ArrowUp'));
+    right.appendChild(makeBtn('btn-f',     'F',   'f',         'KeyF'));
+    right.appendChild(makeBtn('btn-down',  '↓',   'ArrowDown', 'ArrowDown'));
+    right.appendChild(makeBtn('btn-g',     'G',   'g',         'KeyG'));
+    right.appendChild(makeBtn('btn-l',     'L',   'l',         'KeyL'));
+    right.appendChild(makeBtn('btn-m',     'M',   'm',         'KeyM'));
+    right.appendChild(makeBtn('btn-enter', '↵',   'Enter',     'Enter'));
+    right.appendChild(makeBtn('btn-esc',   'Esc', 'Escape',    'Escape'));
 
-    var btnA = document.createElement('button');
-    btnA.className = 'btn-a';
-    btnA.textContent = 'A';
-    attachButton(btnA, 'a', 'KeyA');
-
-    var btnS = document.createElement('button');
-    btnS.className = 'btn-s';
-    btnS.textContent = 'S';
-    attachButton(btnS, 's', 'KeyS');
-
-    var btnD = document.createElement('button');
-    btnD.className = 'btn-d';
-    btnD.textContent = 'D';
-    attachButton(btnD, 'd', 'KeyD');
-
-    leftCluster.appendChild(btnW);
-    leftCluster.appendChild(btnA);
-    leftCluster.appendChild(btnS);
-    leftCluster.appendChild(btnD);
-
-    // Right cluster: action buttons
-    var rightCluster = document.createElement('div');
-    rightCluster.className = 'cluster-right';
-
-    var btnF = document.createElement('button');
-    btnF.className = 'btn-f';
-    btnF.textContent = 'F';
-    attachButton(btnF, 'f', 'KeyF');
-
-    var btnG = document.createElement('button');
-    btnG.className = 'btn-g';
-    btnG.textContent = 'G';
-    attachButton(btnG, 'g', 'KeyG');
-
-    var btnEsc = document.createElement('button');
-    btnEsc.className = 'btn-esc';
-    btnEsc.textContent = 'Esc';
-    attachButton(btnEsc, 'Escape', 'Escape');
-
-    rightCluster.appendChild(btnF);
-    rightCluster.appendChild(btnG);
-    rightCluster.appendChild(btnEsc);
-
-    controls.appendChild(leftCluster);
-    controls.appendChild(rightCluster);
+    controls.appendChild(left);
+    controls.appendChild(right);
     document.body.appendChild(controls);
   });
 }());
