@@ -1,4 +1,5 @@
 local Scene = require("core/lua/scene_2d")
+local Sound = require("game/sound")
 
 local ResultScene = {}
 ResultScene.__index = ResultScene
@@ -19,6 +20,11 @@ function ResultScene.new(params)
 end
 
 function ResultScene:on_enter()
+    if self.outcome == "extracted" then
+        Sound.play("win")
+    else
+        Sound.play("lose")
+    end
     self._elapsed = 0
 end
 

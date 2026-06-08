@@ -73,6 +73,7 @@ end
 
 -- Run a list of test module paths synchronously (headless mode).
 local function run(test_files)
+    require("tests/stubs")
     print("\n=== NIGHTFALL headless tests ===\n")
     for _, path in ipairs(test_files) do
         print("-- " .. path)

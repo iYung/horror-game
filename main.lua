@@ -53,6 +53,7 @@ else
     local SettingsState = require("game/settings_state")
     local SettingsMenu  = require("game/scenes/settings_menu")
     local scene_ref     = require("game/scene_ref")
+    local Sound         = require("game/sound")
 
     local manager = SceneManager.new()
     scene_ref.manager = manager
@@ -61,12 +62,14 @@ else
 
     function love.load()
         love.window.setMode(1280, 720)
+        Sound.load()
         love.window.setTitle("NIGHTFALL")
         settings_menu = SettingsMenu.new(ss)
         manager:switch(PlanningScene.new())
     end
 
     function love.update(dt)
+        Sound.update(dt)
         if settings_menu.is_open then
             settings_menu:update(dt)
         else

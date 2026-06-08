@@ -1,5 +1,6 @@
 local Scene  = require("core/lua/scene_2d")
 local traits = require("game/data/traits")
+local Sound  = require("game/sound")
 
 local PlanningScene = {}
 PlanningScene.__index = PlanningScene
@@ -56,6 +57,7 @@ function PlanningScene.new(save_state)
 end
 
 function PlanningScene:on_enter()
+    Sound.play_music("menu")
     self.loadout_idx = 0
 end
 
@@ -88,6 +90,7 @@ function PlanningScene:keypressed(key)
             monster_traits = roll_traits(self.budget),
         }
         local manager = require("game/scene_ref").manager
+        Sound.stop_music("menu")
         manager:switch(TraitRevealScene.new(run_config, self.save_state))
     end
 end
