@@ -165,7 +165,7 @@ end
 local function transition(self, state)
     self.state = state
     if state == "alerted" or state == "chase" then
-        Sound.play("monster_alerted")
+
     end
 end
 
@@ -187,14 +187,16 @@ function Monster:update(dt, player)
 
     if self.step_timer:update(dt) then
         local cells = d_px / CELL
-        if cells <= 3 then
+        if cells <= 4 then
             self.shake:trigger(6)
-        elseif cells <= 6 then
+            Sound.play("monster_step", 1.0)
+        elseif cells <= 8 then
             self.shake:trigger(3)
-        elseif cells <= 10 then
+            Sound.play("monster_step", 0.5)
+        elseif cells <= 12 then
             self.shake:trigger(1)
+            Sound.play("monster_step", 0.2)
         end
-        Sound.play("monster_step")
     end
 
     if self.has_sight then

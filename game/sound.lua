@@ -29,7 +29,6 @@ local _music_volume = 1
 
 local SFX_NAMES = {
     "monster_step",
-    "monster_alerted",
     "item_pickup",
     "item_use",
     "extraction_start",
@@ -105,11 +104,12 @@ end
 
 -- ── SFX ───────────────────────────────────────────────────────────────────────
 
-function Sound.play(name)
+function Sound.play(name, volume)
     if not love.audio then return end
     local src = _sfx[name]
     if not src then return end
     local clone = src:clone()
+    if volume then clone:setVolume(math.max(0, math.min(1, volume * _sfx_volume))) end
     clone:play()
 end
 
