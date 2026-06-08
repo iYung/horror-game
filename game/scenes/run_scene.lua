@@ -10,6 +10,14 @@ local Map         = require("game/world/map")
 
 local CELL = Map.CELL
 
+local _images = {}
+local function img(path)
+    if not _images[path] then
+        _images[path] = love.graphics.newImage(path)
+    end
+    return _images[path]
+end
+
 local RunScene = setmetatable({}, { __index = Scene3D })
 RunScene.__index = RunScene
 
@@ -202,52 +210,48 @@ end
 -- Build billboard sprite list for the current frame
 local function build_sprites(self)
     local sprites = {}
-    local t       = love.timer.getTime()
 
     -- Monster
     table.insert(sprites, {
         x     = self.monster.x / CELL + 1,
         y     = self.monster.y / CELL + 1,
-        size  = 0.8,
-        color = {0.9, 0.1, 0.1, 1},
+        scale = 0.8,
+        image = img("assets/sprites/monster.png"),
     })
 
     -- Ground items
     for _, entry in ipairs(self.ground_items) do
-        local id = entry.item and entry.item.id
-        local color = id == "flare_gun"   and {1, 0.2, 0.8, 1}
-                   or id == "compass"    and {0.3, 0.8, 1.0, 1}
-                   or id == "tracker"   and {1, 0.4, 0.1, 1}
-                   or id == "adrenaline" and {0.2, 1.0, 0.4, 1}
-                   or id == "taser"      and {0.3, 0.8, 1.0, 1}
-                   or                       {1, 0.9, 0.3, 1}
+        local id      = entry.item and entry.item.id
+        local path    = id == "flare_gun"   and "assets/sprites/flare_gun.png"
+                     or id == "compass"     and "assets/sprites/compass.png"
+                     or id == "tracker"     and "assets/sprites/tracker.png"
+                     or id == "adrenaline"  and "assets/sprites/adrenaline.png"
+                     or id == "taser"       and "assets/sprites/taser.png"
+                     or                         "assets/sprites/flashlight.png"
         table.insert(sprites, {
             x     = entry.x / CELL + 1,
             y     = entry.y / CELL + 1,
-            size  = 0.4,
-            color = color,
+            scale = 0.4,
+            image = img(path),
         })
     end
 
-    -- Extraction zone — tall green pillar, pulses when active
-    local ez    = self.map.extraction
-    local pulse = 0.5 + 0.5 * math.sin(t * 3)
-    local alpha = self.extraction:is_active()
-        and (0.7 + 0.3 * pulse)
-        or  (0.3 + 0.2 * pulse)
+    -- Extraction zone — tall pillar, floats slightly above the floor
+    local ez = self.map.extraction
     table.insert(sprites, {
-        x     = ez.x / CELL + 1,
-        y     = ez.y / CELL + 1,
-        size  = 2.0,
-        color = {0.1, 1.0, 0.2, alpha},
+        x       = ez.x / CELL + 1,
+        y       = ez.y / CELL + 1,
+        scale   = 2.0,
+        voffset = 0.5,
+        image   = img("assets/sprites/extraction.png"),
     })
 
-    for _, t in ipairs(self.map.torches) do
+    for _, torch in ipairs(self.map.torches) do
         table.insert(sprites, {
-            x     = t.col + 0.5,
-            y     = t.row + 0.5,
-            size  = 0.25,
-            color = {1.0, 0.65, 0.15, 1},
+            x     = torch.col + 0.5,
+            y     = torch.row + 0.5,
+            scale = 0.25,
+            image = img("assets/sprites/torch.png"),
         })
     end
 
@@ -255,15 +259,11 @@ local function build_sprites(self)
 end
 
 function RunScene:draw()
-    self.raycaster:draw(
-        self.map,
-        self.player.x, self.player.y,
-        self.player.angle + self._shake_angle,
-        {
-            lights    = build_lights(self),
-            sprites   = build_sprites(self),
-        }
-    )
+    local lights  = build_lights(self)
+    local sprites = build_sprites(self)
+    local angle   = self.player.angle + self._shake_angle
+    self.raycaster:draw(self.map, self.player.x, self.player.y, angle, { lights = lights })
+    self.raycaster:draw_sprites(sprites, self.player.x, self.player.y, angle, lights)
     -- 2D overlay: HUD drawn in screen space after the 3D pass
     self.drawer:draw()
 end

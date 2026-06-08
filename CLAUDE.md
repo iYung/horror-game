@@ -35,7 +35,7 @@ Always use these. Never reimplement what they already do.
 | `Camera` | World-to-screen transform, smooth follow, zoom |
 | `Scene` | Pure lifecycle base class; no rendering state |
 | `Scene2D` | Subclass of `Scene`; owns a `Drawer` and a `Camera` — use this for all game scenes |
-| `SceneManager` | Holds the active scene; drives `update` and `draw` |
+| `SceneManager` | Holds the active scene; drives `update` and `draw`; animates a 0.3 s black-rect fade between scene transitions |
 | `Timer` | Fires after an interval, preserves remainder for accurate looping |
 | `Input` | Action-mapped keyboard polling; call `update()` once per frame |
 
@@ -129,8 +129,11 @@ Player position is stored in **1-indexed grid units** (`player.x`, `player.y`). 
 5. `shake:update(dt)` → store `_shake_angle`
 
 ### Draw order (each frame)
-1. `raycaster:draw(map, player.x, player.y, player.angle + shake_angle, opts)` — full 3D world pass; fog range and billboard sprite list built each frame
-2. `drawer:draw()` — HUD in screen space
+1. `raycaster:draw(map, player.x, player.y, angle, opts)` — walls-only 3D pass; builds `z_buffer`
+2. `raycaster:draw_sprites(sprites, player.x, player.y, angle, lights)` — image-based billboards (monster, items, extraction, torches), z-buffer occluded, fog-lit
+3. `drawer:draw()` — HUD in screen space
+
+`angle` is `player.angle + _shake_angle`. The same `lights` table is passed to both raycaster calls. `build_sprites()` in RunScene assembles the sprite list; images are lazy-loaded and cached in a module-level `_images` table via the `img(path)` helper.
 
 ---
 
@@ -143,7 +146,7 @@ The 2D FOV system has been replaced by **light-based fog** in the raycaster. Wal
 - **Wall torches** — static point lights (radius 6) placed around the map
 - **Flashlight** — when any inventory slot holds a flashlight that is `active` and `on`, RunScene adds a player-centred point light (radius 6) each frame, extending how far the player can see
 
-`fov.lua` still exists but is unused in RunScene. Monster visibility (`monster.visible`) is no longer toggled — monsters render as billboards whenever they're in front of the player and not wall-occluded.
+`fov.lua` still exists but is unused in RunScene. Monster visibility (`monster.visible`) is no longer toggled — monsters render as image-based billboards (`assets/sprites/monster.png`) whenever they're in front of the player and not wall-occluded. All billboards (monster, items, extraction zone, torches) are PNG images loaded from `assets/sprites/` and drawn via `raycaster:draw_sprites()`.
 
 ### Camera shake (`game/systems/camera_shake.lua`)
 
@@ -228,7 +231,7 @@ Always instantiate with `items.new(id)` — returns a fresh table. Never share i
 | Item | Value | Key behaviour |
 |------|-------|---------------|
 | Flashlight | 1 | Toggle on/off with `F`. Burns 120 s total (regardless of on/off). While on, adds a player-centred point light (extending visibility) and triggers monster Sight glow detection — both effects apply from any inventory slot, not just the active one. |
-| Flare Gun | 0 | `use_fn` returns `"extract"`. RunScene intercepts this, calls `extraction:try_start` only if player is in zone, then removes the item from inventory. Renders as a pink billboard. |
+| Flare Gun | 0 | `use_fn` returns `"extract"`. RunScene intercepts this, calls `extraction:try_start` only if player is in zone, then removes the item from inventory. Renders as an image billboard (`assets/sprites/flare_gun.png`). |
 | Compass | 3 | Passive. While held as the active item, the HUD draws a directional arrow pointing toward the extraction zone. No use_fn. |
 | Tracker | 1 | Passive. While held as the active item, the HUD draws a red directional arrow pointing toward the monster. No use_fn. |
 | Adrenaline Shot | 2 | Press `F` to inject. Boosts movement speed by 1.75× for 5 s, then enters a 20 s cooldown. The boost and cooldown continue in any inventory slot — switching away does not cancel the effect. `speed_mult` is read by scanning all slots, not just the active one. |
