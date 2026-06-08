@@ -190,6 +190,58 @@ Used only by monster WANDER/ALERTED/SEARCH states. Monster ignores wall collisio
 
 ---
 
+## Audio (`game/sound.lua`)
+
+`Sound` is a module-level singleton — no `new()`, just `require("game/sound")` and call the functions directly. Wire it once in `main.lua`: `Sound.load()` after `love.window.setMode`, and `Sound.update(dt)` at the top of `love.update`.
+
+Every function opens with `if not love.audio then return end`, so all calls are safe no-ops in headless test mode (where `love.audio` is nil).
+
+### SFX events
+
+Loaded as static sources from `assets/sounds/<name>.wav`; each `Sound.play(name)` clones the source and plays the clone so overlapping calls never cut each other off. Missing files are silently skipped at load time.
+
+| Event name | When triggered |
+|---|---|
+| `"monster_step"` | Monster step timer fires (once per 0.5 s tick) |
+| `"monster_alerted"` | Monster transitions into ALERTED or CHASE state |
+| `"item_pickup"` | Player picks up a ground item |
+| `"item_use"` | Player uses the active item |
+| `"extraction_start"` | `extraction:try_start()` succeeds (flare gun in zone) |
+| `"extraction_ready"` | Extraction countdown completes but player is out of zone |
+| `"player_death"` | `monster.on_kill` fires |
+| `"win"` | ResultScene entered with outcome `"extracted"` |
+| `"lose"` | ResultScene entered with outcome `"death"` |
+
+### Music tracks
+
+Loaded as streaming looping sources from `assets/music/<name>.wav` or `.mp3` (tries both extensions). Drop audio files into those directories to activate them.
+
+| Track | Scene | Behaviour |
+|---|---|---|
+| `"menu"` | PlanningScene | `play_music("menu")` on `on_enter`; `stop_music("menu")` before switching to run |
+| `"ambient"` | RunScene (calm) | `play_music("ambient")` on `on_enter`; `stop_music("ambient")` on `on_exit` |
+| `"chase"` | RunScene (combat) | `fade_music("chase", 1, 1.0)` + `fade_music("ambient", 0, 1.0)` when monster enters CHASE; reversed over 2 s when monster leaves CHASE |
+
+Chase music transitions are driven by RunScene detecting changes to `self.monster.state` each frame, comparing against `self._prev_monster_state`.
+
+### API
+
+```lua
+Sound.load()                        -- load all present assets; call once
+Sound.update(dt)                    -- advance fade ramps; call every frame
+Sound.play(name)                    -- fire-and-forget SFX
+Sound.play_music(name)              -- start music immediately at full volume
+Sound.fade_music(name, target, secs) -- smooth volume ramp
+Sound.stop_music(name)              -- stop and rewind
+Sound.is_music_playing(name)        -- bool
+Sound.set_sfx_volume(0..1)
+Sound.set_music_volume(0..1)
+```
+
+Asset directories: `assets/sounds/` and `assets/music/` (both currently empty; tracked in git via `.gitkeep`).
+
+---
+
 ## Entities
 
 ### Player (`game/entities/player.lua`)
@@ -323,11 +375,18 @@ In `--watch` mode each test coroutine drives the simulation frame-by-frame and t
 ```
 tests/
   runner.lua       Minimal busted-compatible framework — describe / it / assert.*
+  stubs.lua        No-op replacements for love.graphics, love.keyboard.isDown, and
+                   love.filesystem.getInfo — installed at the top of runner.run()
+                   (headless path only; watch mode uses real graphics)
   test_run.lua     Core game scenarios; one it() per scenario
   test_*.lua       Any file starting with test_ is auto-discovered and run by both
                    --headless and --watch. No changes to main.lua needed.
   watch_scene.lua  Scene3D subclass that renders Simulation._current each frame
 ```
+
+`tests/stubs.lua` installs love.graphics no-ops (including a catch-all metatable for unlisted keys, and stub image tables for any `love.graphics.new*` call) before any game module loads. This lets modules that call `love.graphics.newFont` or `love.graphics.newImage` at require-time be safely loaded in headless mode.
+
+`core/lua/headless_input.lua` is a companion input driver for per-frame edge-trigger tests. It exposes `:press(action)` (sets down+pressed for one frame), `:hold(action)` (down stays, pressed only on first frame), `:release(action)`, `:update()` (clear pressed flags — call before each scene update), `:is_down(action)`, and `:pressed(action)`.
 
 `game/simulation.lua` is the headless run harness. It mirrors RunScene's setup and update loop with no rendering or scene management. The player is driven by `SimInput` (core/lua/sim_input.lua) instead of the keyboard.
 

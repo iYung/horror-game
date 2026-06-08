@@ -21,6 +21,7 @@
 local Timer      = require("core/lua/timer")
 local Map        = require("game/world/map")
 local Player     = require("game/entities/player")
+local Sound      = require("game/sound")
 
 local CELL          = Map.CELL
 local BASE_SPEED    = Player.BASE_SPEED
@@ -163,6 +164,9 @@ end
 
 local function transition(self, state)
     self.state = state
+    if state == "alerted" or state == "chase" then
+        Sound.play("monster_alerted")
+    end
 end
 
 function Monster:update(dt, player)
@@ -190,6 +194,7 @@ function Monster:update(dt, player)
         elseif cells <= 10 then
             self.shake:trigger(1)
         end
+        Sound.play("monster_step")
     end
 
     if self.has_sight then

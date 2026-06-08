@@ -7,6 +7,7 @@ local Extraction  = require("game/systems/extraction")
 local ItemSpawner = require("game/world/item_spawner")
 local HUD         = require("game/ui/hud")
 local Map         = require("game/world/map")
+local Sound       = require("game/sound")
 
 local CELL = Map.CELL
 
@@ -37,6 +38,7 @@ local function wrap_flare_gun(item, extraction)
             local result = original_use(p, world)
             if result == "extract" then
                 extraction:try_start(p)
+                Sound.play("extraction_start")
                 p.inventory:remove_item_by_ref(item)
             end
         end
@@ -72,9 +74,11 @@ function RunScene.new(run_config, save_state)
 end
 
 function RunScene:on_enter()
-    self._dead        = false
-    self._extracted   = false
-    self._shake_angle = 0
+    self._dead                  = false
+    self._extracted             = false
+    self._shake_angle           = 0
+    self._prev_monster_state    = "wander"
+    self._extraction_was_ready  = false
 
     local map = load_map(self.run_config.map_id)
     self.map  = map
@@ -106,6 +110,7 @@ function RunScene:on_enter()
     self.monster.on_kill = function()
         if not self._dead then
             self._dead = true
+            Sound.play("player_death")
             local manager     = require("game/scene_ref").manager
             local ResultScene = require("game/scenes/result_scene")
             manager:switch(ResultScene.new({ outcome = "death", save_state = self.save_state }))
@@ -129,9 +134,10 @@ function RunScene:on_enter()
     for _, entry in ipairs(self.ground_items) do maybe_wrap_taser(entry.item) end
     for i = 1, 5 do maybe_wrap_taser(self.player.inventory.slots[i]) end
 
-    self.player.on_use = function(p) end
+    self.player.on_use = function(p) Sound.play("item_use") end
 
     self.player.on_pickup = function(entry)
+        Sound.play("item_pickup")
         for i = #self.ground_items, 1, -1 do
             if self.ground_items[i] == entry then
                 table.remove(self.ground_items, i)
@@ -141,6 +147,13 @@ function RunScene:on_enter()
         maybe_wrap(entry.item)
         maybe_wrap_taser(entry.item)
     end
+
+    Sound.play_music("ambient")
+end
+
+function RunScene:on_exit()
+    Sound.stop_music("ambient")
+    Sound.stop_music("chase")
 end
 
 function RunScene:update(dt)
@@ -169,6 +182,18 @@ function RunScene:update(dt)
 
     self.monster:update(dt, self.player)
 
+    local new_state = self.monster.state
+    if new_state ~= self._prev_monster_state then
+        if new_state == "chase" then
+            Sound.fade_music("chase",   1, 1.0)
+            Sound.fade_music("ambient", 0, 1.0)
+        elseif self._prev_monster_state == "chase" then
+            Sound.fade_music("ambient", 1, 2.0)
+            Sound.fade_music("chase",   0, 2.0)
+        end
+        self._prev_monster_state = new_state
+    end
+
     local result = self.extraction:update(dt, self.player)
     if result == "extracted" and not self._extracted then
         self._extracted = true
@@ -185,6 +210,11 @@ function RunScene:update(dt)
         local ResultScene = require("game/scenes/result_scene")
         manager:switch(ResultScene.new({ outcome = "extracted", save_state = self.save_state, loot = loot }))
         return
+    end
+
+    if not self._extraction_was_ready and self.extraction:is_ready() then
+        Sound.play("extraction_ready")
+        self._extraction_was_ready = true
     end
 
     self.shake:update(dt)
