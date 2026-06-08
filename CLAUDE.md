@@ -202,8 +202,7 @@ Loaded as static sources from `assets/sounds/<name>.wav`; each `Sound.play(name)
 
 | Event name | When triggered |
 |---|---|
-| `"monster_step"` | Monster step timer fires (once per 0.5 s tick) |
-| `"monster_alerted"` | Monster transitions into ALERTED or CHASE state |
+| `"monster_step"` | Monster step timer fires (once per 0.5 s tick); volume is distance-based: full (≤4 cells), half (≤8), faint (≤12), silent beyond |
 | `"item_pickup"` | Player picks up a ground item |
 | `"item_use"` | Player uses the active item |
 | `"extraction_start"` | `extraction:try_start()` succeeds (flare gun in zone) |
@@ -229,7 +228,7 @@ Chase music transitions are driven by RunScene detecting changes to `self.monste
 ```lua
 Sound.load()                        -- load all present assets; call once
 Sound.update(dt)                    -- advance fade ramps; call every frame
-Sound.play(name)                    -- fire-and-forget SFX
+Sound.play(name, volume)            -- fire-and-forget SFX; volume 0–1, defaults to sfx volume
 Sound.play_music(name)              -- start music immediately at full volume
 Sound.fade_music(name, target, secs) -- smooth volume ramp
 Sound.stop_music(name)              -- stop and rewind
